@@ -52,6 +52,10 @@ func InitRouter() *gin.Engine {
 	return ginR
 }
 
+var middlewareChain = NewMiddlewareChain().
+	Add(QueryKeyCaseInsensitive).
+	Add(DisableCompression)
+
 // 正则表达式路由处理器
 //
 // 从媒体服务器处理结构体中获取正则路由规则
@@ -63,7 +67,7 @@ func RegexpRouterHandler(ctx *gin.Context) {
 		if rule.Regexp.MatchString(ctx.Request.URL.Path) { // 不带查询参数的字符串：/emby/Items/54/Images/Primary
 			logging.Debugf("URL: %s 匹配成功 -> %s", ctx.Request.URL.Path, rule.Regexp.String())
 
-			QueryKeyCaseInsensitive(DisableCompression(rule.Handler))(ctx)
+			middlewareChain.Execute(rule.Handler)(ctx)
 			return
 		}
 	}
