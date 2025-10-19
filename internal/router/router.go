@@ -48,30 +48,31 @@ func InitRouter() *gin.Engine {
 		}
 	}
 
-	ginR.NoRoute(RegexpRouterHandler)
+	ginR.NoRoute(getRegexpRouterHandler())
 	return ginR
 }
-
-var middlewareChain = NewMiddlewareChain().
-	Add(QueryKeyCaseInsensitive).
-	Add(DisableCompression)
 
 // 正则表达式路由处理器
 //
 // 从媒体服务器处理结构体中获取正则路由规则
 // 依次匹配请求, 找到对应的处理器
-func RegexpRouterHandler(ctx *gin.Context) {
+func getRegexpRouterHandler() gin.HandlerFunc {
 	mediaServerHandler := handler.GetMediaServer()
+	middlewareChain := NewMiddlewareChain().
+		Add(QueryKeyCaseInsensitive).
+		Add(DisableCompression)
 
-	for _, rule := range mediaServerHandler.GetRegexpRouteRules() {
-		if rule.Regexp.MatchString(ctx.Request.URL.Path) { // 不带查询参数的字符串：/emby/Items/54/Images/Primary
-			logging.Debugf("URL: %s 匹配成功 -> %s", ctx.Request.URL.Path, rule.Regexp.String())
+	return func(ctx *gin.Context) {
+		for _, rule := range mediaServerHandler.GetRegexpRouteRules() {
+			if rule.Regexp.MatchString(ctx.Request.URL.Path) { // 不带查询参数的字符串：/emby/Items/54/Images/Primary
+				logging.Debugf("URL: %s 匹配成功 -> %s", ctx.Request.URL.Path, rule.Regexp.String())
 
-			middlewareChain.Execute(rule.Handler)(ctx)
-			return
+				middlewareChain.Execute(rule.Handler)(ctx)
+				return
+			}
 		}
-	}
 
-	// 未匹配路由
-	mediaServerHandler.ReverseProxy(ctx.Writer, ctx.Request)
+		// 未匹配路由
+		mediaServerHandler.ReverseProxy(ctx.Writer, ctx.Request)
+	}
 }
