@@ -8,6 +8,8 @@ import (
 	"MediaWarp/internal/middleware"
 	"MediaWarp/static"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +19,6 @@ func InitRouter() *gin.Engine {
 	ginR.Use(
 		middleware.Logger(),
 		middleware.Recovery(),
-		middleware.QueryCaseInsensitive(),
 		middleware.SetRefererPolicy(constants.SameOrigin),
 	)
 
@@ -62,6 +63,12 @@ func RegexpRouterHandler(ctx *gin.Context) {
 
 	for _, rule := range mediaServerHandler.GetRegexpRouteRules() {
 		if rule.Regexp.MatchString(ctx.Request.URL.Path) { // 不带查询参数的字符串：/emby/Items/54/Images/Primary
+			queryParams := make(url.Values)
+			for key, values := range ctx.Request.URL.Query() {
+				queryParams.Add(strings.ToLower(key), strings.Join(values, ","))
+			}
+			ctx.Request.URL.RawQuery = queryParams.Encode()
+
 			logging.Debugf("URL: %s 匹配成功 -> %s", ctx.Request.URL.Path, rule.Regexp.String())
 			rule.Handler(ctx)
 			return
