@@ -222,12 +222,6 @@ func getFinalURL(rawURL string, ua string) (string, error) {
 				return "", ErrInvalidLocationHeader
 			}
 			currentURL = location.String()
-			if strings.HasPrefix(currentURL, "/302/?pickcode=") {
-				fullURL := fmt.Sprintf("%s://%s%s", req.URL.Scheme, req.URL.Host, location)
-				logging.Debugf("拼接完整 URL：%s -> %s", currentURL, fullURL)
-				currentURL = fullURL
-			}
-
 			continue
 		}
 
