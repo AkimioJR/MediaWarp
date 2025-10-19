@@ -96,61 +96,62 @@ func (alistServer *AlistServer) getToken() (string, error) {
 	return loginData.Token, nil
 }
 
-func (alistServer *AlistServer) doRequest(method string, path string, reqBody io.Reader, result any, needToken bool, needCache bool) error {
-	var resp AlistResponse[any]
+func doRequest[T any](alistServer *AlistServer, method string, path string, reqBody io.Reader, needToken bool, needCache bool) (*T, error) {
+	var resp AlistResponse[T]
 
 	cacheKey := method + "|" + path
 	if needCache && alistServer.cache != nil {
 		if data, err := alistServer.cache.Get(cacheKey); err == nil {
-			return json.Unmarshal(data, result)
+			err = json.Unmarshal(data, &resp)
+			if err != nil {
+				return nil, fmt.Errorf("反序列化缓存数据失败: %w", err)
+			}
+			return &resp.Data, nil
 		}
 	}
 	var url = alistServer.GetEndpoint() + path
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %w", err)
+		return nil, fmt.Errorf("创建请求失败: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	if needToken {
 		token, err := alistServer.getToken()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		req.Header.Add("Authorization", token)
 	}
 
 	res, err := alistServer.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("请求失败: %w", err)
+		return nil, fmt.Errorf("请求失败: %w", err)
 	}
 	defer res.Body.Close()
-	err = json.NewDecoder(res.Body).Decode(&resp)
+
+	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		return fmt.Errorf("解析响应体失败: %w", err)
+		return nil, fmt.Errorf("读取响应体失败: %w", err)
+	}
+
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("解析响应体失败: %w", err)
 	}
 
 	if resp.Code != http.StatusOK {
-		return fmt.Errorf("请求失败，HTTP 状态码: %d, 相应状态码: %d, 相应信息: %s", res.StatusCode, resp.Code, resp.Message)
-	}
-
-	data, err := json.Marshal(resp.Data)
-	if err != nil {
-		return fmt.Errorf("序列化响应数据失败: %w", err)
-	}
-	err = json.Unmarshal(data, result)
-	if err != nil {
-		return fmt.Errorf("反序列化到结果类型失败: %w", err)
+		return nil, fmt.Errorf("请求失败，HTTP 状态码: %d, 相应状态码: %d, 相应信息: %s", res.StatusCode, resp.Code, resp.Message)
 	}
 
 	if needCache && alistServer.cache != nil {
 		err = alistServer.cache.Set(cacheKey, data)
 		if err != nil {
-			return fmt.Errorf("缓存响应体失败: %w", err)
+			return nil, fmt.Errorf("缓存响应体失败: %w", err)
 		}
 	}
 
-	return nil
+	return &resp.Data, nil
 }
 
 // ==========Alist API(v3) 相关操作==========
@@ -159,14 +160,13 @@ func (alistServer *AlistServer) doRequest(method string, path string, reqBody io
 func (alistServer *AlistServer) authLogin() (*AuthLoginData, error) {
 	var (
 		payload = strings.NewReader(fmt.Sprintf(`{"username": "%s","password": "%s"}`, alistServer.GetUsername(), alistServer.password))
-		data    AuthLoginData
 	)
 
-	err := alistServer.doRequest(
+	data, err := doRequest[AuthLoginData](
+		alistServer,
 		http.MethodPost,
 		"/api/auth/login",
 		payload,
-		&data,
 		false,
 		false,
 	)
@@ -174,43 +174,42 @@ func (alistServer *AlistServer) authLogin() (*AuthLoginData, error) {
 		return nil, fmt.Errorf("登录失败: %w", err)
 	}
 
-	return &data, nil
+	return data, nil
 }
 
 // 获取某个文件/目录信息
 func (alistServer *AlistServer) FsGet(path string) (*FsGetData, error) {
 	var (
-		data    FsGetData
 		payload = strings.NewReader(fmt.Sprintf(`{"path": "%s","password": "","page": 1,"per_page": 0,"refresh": false}`, path))
 	)
-	err := alistServer.doRequest(
+	data, err := doRequest[FsGetData](
+		alistServer,
 		http.MethodPost,
 		"/api/fs/get",
 		payload,
-		&data,
 		true,
 		true,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("获取文件/目录信息失败: %w", err)
 	}
-	return &data, nil
+	return data, nil
 }
 
 func (alistServer *AlistServer) Me() (*UserInfoData, error) {
-	var data UserInfoData
-	err := alistServer.doRequest(
+
+	data, err := doRequest[UserInfoData](
+		alistServer,
 		http.MethodGet,
 		"/api/me",
 		nil,
-		&data,
 		true,
 		true,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("获取用户信息失败: %w", err)
 	}
-	return &data, nil
+	return data, nil
 }
 
 // GetFileURL 获取文件的可访问 URL
