@@ -167,7 +167,7 @@ var (
 )
 
 // 获取URL的最终目标地址（自动跟踪重定向）
-func getFinalURL(rawURL string, ua string) (string, error) {
+func getFinalURL(client *http.Client, rawURL string, ua string) (string, error) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("获取 %s 最终URL耗时：%s", rawURL, time.Since(startTime))
@@ -179,15 +179,6 @@ func getFinalURL(rawURL string, ua string) (string, error) {
 	}
 	if parsedURL.Scheme == "" {
 		return "", fmt.Errorf("URL 缺少协议头： %s", parsedURL)
-	}
-
-	// 创建自定义HTTP客户端配置
-	client := &http.Client{
-		Timeout: RedirectTimeout,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// 禁止自动重定向，以便手动处理
-			return http.ErrUseLastResponse
-		},
 	}
 
 	currentURL := parsedURL.String()

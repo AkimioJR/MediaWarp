@@ -5,6 +5,7 @@ import (
 	"MediaWarp/internal/logging"
 	"MediaWarp/internal/service"
 	"fmt"
+	"net/http"
 
 	"github.com/allegro/bigcache"
 )
@@ -21,6 +22,14 @@ func getHTTPStrmHandler() (StrmHandlerFunc, error) {
 		}
 		logging.Info("启用 HTTPStrm 缓存，TTL: ", config.Cache.HTTPStrmTTL)
 	}
+
+	client := &http.Client{ // 创建自定义HTTP客户端配置
+		Timeout: RedirectTimeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// 禁止自动重定向，以便手动处理
+			return http.ErrUseLastResponse
+		},
+	}
 	return func(content string, ua string) string {
 		if config.HTTPStrm.FinalURL {
 			if cache != nil {
@@ -31,7 +40,7 @@ func getHTTPStrmHandler() (StrmHandlerFunc, error) {
 			}
 
 			logging.Debug("HTTPStrm 启用获取最终 URL，开始尝试获取最终 URL")
-			finalURL, err := getFinalURL(content, ua)
+			finalURL, err := getFinalURL(client, content, ua)
 			if err != nil {
 				logging.Warning("获取最终 URL 失败，使用原始 URL: ", err)
 			} else {
