@@ -10,11 +10,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -108,7 +110,7 @@ func (embyServerHandler *EmbyServerHandler) GetRegexpRouteRules() []RegexpRouteR
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
 func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response) error {
 	defer rw.Body.Close()
-	body, err := readBody(rw)
+	body, err := io.ReadAll(rw.Body)
 	if err != nil {
 		logging.Warning("读取 Body 出错：", err)
 		return err
@@ -194,8 +196,10 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		return err
 	}
 
-	rw.Header.Set("Content-Type", "application/json") // 更新 Content-Type 头
-	return updateBody(rw, body)
+	rw.Header.Set("Content-Type", "application/json")        // 更新 Content-Type 头
+	rw.Header.Set("Content-Length", strconv.Itoa(len(body))) // 更新 Content-Length 头
+	rw.Body = io.NopCloser(bytes.NewReader(body))
+	return nil
 }
 
 // 视频流处理器
@@ -267,7 +271,7 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 // 将 SRT 字幕转 ASS
 func (embyServerHandler *EmbyServerHandler) ModifySubtitles(rw *http.Response) error {
 	defer rw.Body.Close()
-	subtitile, err := readBody(rw) // 读取字幕文件
+	subtitile, err := io.ReadAll(rw.Body) // 读取字幕文件
 	if err != nil {
 		logging.Warning("读取原始字幕 Body 出错：", err)
 		return err
@@ -278,7 +282,9 @@ func (embyServerHandler *EmbyServerHandler) ModifySubtitles(rw *http.Response) e
 		if config.Subtitle.SRT2ASS {
 			logging.Info("已将 SRT 字幕已转为 ASS 格式")
 			assSubtitle := utils.SRT2ASS(subtitile, config.Subtitle.ASSStyle)
-			return updateBody(rw, assSubtitle)
+			rw.Header.Set("Content-Length", strconv.Itoa(len(assSubtitle)))
+			rw.Body = io.NopCloser(bytes.NewReader(assSubtitle))
+			return nil
 		}
 	}
 	return nil
@@ -289,14 +295,15 @@ func (embyServerHandler *EmbyServerHandler) ModifySubtitles(rw *http.Response) e
 // 用于修改播放器 JS，实现跨域播放 Strm 文件（302 重定向）
 func (embyServerHandler *EmbyServerHandler) ModifyBaseHtmlPlayer(rw *http.Response) error {
 	defer rw.Body.Close()
-	body, err := readBody(rw)
+	body, err := io.ReadAll(rw.Body)
 	if err != nil {
 		return err
 	}
 
 	body = bytes.ReplaceAll(body, []byte(`mediaSource.IsRemote&&"DirectPlay"===playMethod?null:"anonymous"`), []byte("null")) // 修改响应体
-	return updateBody(rw, body)
-
+	rw.Header.Set("Content-Length", strconv.Itoa(len(body)))
+	rw.Body = io.NopCloser(bytes.NewReader(body))
+	return nil
 }
 
 // 修改首页函数
@@ -310,7 +317,7 @@ func (embyServerHandler *EmbyServerHandler) ModifyIndex(rw *http.Response) error
 
 	defer rw.Body.Close()  // 无论哪种情况，最终都要确保原 Body 被关闭，避免内存泄漏
 	if !config.Web.Index { // 从上游获取响应体
-		if htmlContent, err = readBody(rw); err != nil {
+		if htmlContent, err = io.ReadAll(rw.Body); err != nil {
 			return err
 		}
 	} else { // 从本地文件读取index.html
@@ -346,7 +353,9 @@ func (embyServerHandler *EmbyServerHandler) ModifyIndex(rw *http.Response) error
 		addHEAD = append(addHEAD, []byte(`<script src="https://2gether.video/release/extension.website.user.js"></script>`+"\n")...)
 	}
 	htmlContent = bytes.Replace(htmlContent, []byte("</head>"), append(addHEAD, []byte("</head>")...), 1) // 将添加HEAD
-	return updateBody(rw, htmlContent)
+	rw.Header.Set("Content-Length", strconv.Itoa(len(htmlContent)))
+	rw.Body = io.NopCloser(bytes.NewReader(htmlContent))
+	return nil
 }
 
 var _ MediaServerHandler = (*EmbyServerHandler)(nil) // 确保 EmbyServerHandler 实现 MediaServerHandler 接口

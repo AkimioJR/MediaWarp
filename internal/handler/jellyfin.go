@@ -10,11 +10,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -90,7 +92,7 @@ func (jellyfinHandler *JellyfinHandler) GetRegexpRouteRules() []RegexpRouteRule 
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
 func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
 	defer rw.Body.Close()
-	data, err := readBody(rw)
+	data, err := io.ReadAll(rw.Body)
 	if err != nil {
 		logging.Warning("读取响应体失败：", err)
 		return err
@@ -180,7 +182,9 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 	}
 
 	rw.Header.Set("Content-Type", "application/json") // 更新 Content-Type 头
-	return updateBody(rw, data)
+	rw.Header.Set("Content-Length", strconv.Itoa(len(data)))
+	rw.Body = io.NopCloser(bytes.NewReader(data))
+	return nil
 }
 
 // 视频流处理器
@@ -251,7 +255,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyIndex(rw *http.Response) error {
 			return err
 		}
 	} else { // 从上游获取响应体
-		if htmlContent, err = readBody(rw); err != nil {
+		if htmlContent, err = io.ReadAll(rw.Body); err != nil {
 			return err
 		}
 	}
@@ -283,7 +287,9 @@ func (jellyfinHandler *JellyfinHandler) ModifyIndex(rw *http.Response) error {
 	}
 	htmlContent = bytes.Replace(htmlContent, []byte("</head>"), append(addHEAD, []byte("</head>")...), 1) // 将添加HEAD
 
-	return updateBody(rw, htmlContent)
+	rw.Header.Set("Content-Length", strconv.Itoa(len(htmlContent)))
+	rw.Body = io.NopCloser(bytes.NewReader(htmlContent))
+	return nil
 }
 
 var _ MediaServerHandler = (*JellyfinHandler)(nil) // 确保 JellyfinHandler 实现 MediaServerHandler 接口

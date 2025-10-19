@@ -4,22 +4,17 @@ import (
 	"MediaWarp/constants"
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
-	"bytes"
-	"compress/gzip"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"reflect"
 	"runtime"
 	"runtime/debug"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/andybalholm/brotli"
 	"github.com/gin-gonic/gin"
 )
 
@@ -69,90 +64,6 @@ func recgonizeStrmFileType(strmFilePath string) (constants.StrmFileType, any) {
 	}
 	logging.Debugf("%s 未匹配任何路径，Strm 类型：%s", strmFilePath, constants.UnknownStrm)
 	return constants.UnknownStrm, nil
-}
-
-// 读取响应体
-//
-// 读取响应体，解压缩 GZIP、Brotli 数据（若响应体被压缩）
-func readBody(rw *http.Response) ([]byte, error) {
-	encoding := rw.Header.Get("Content-Encoding")
-
-	var reader io.Reader
-	switch encoding {
-	case "gzip":
-		logging.Debug("解码 GZIP 数据")
-		gr, err := gzip.NewReader(rw.Body)
-		if err != nil {
-			return nil, fmt.Errorf("gzip reader error: %w", err)
-		}
-		defer gr.Close()
-		reader = gr
-
-	case "br":
-		logging.Debug("解码 Brotli 数据")
-		reader = brotli.NewReader(rw.Body)
-
-	case "": // 无压缩
-		logging.Debug("无压缩数据")
-		reader = rw.Body
-
-	default:
-		return nil, fmt.Errorf("unsupported Content-Encoding: %s", encoding)
-	}
-	return io.ReadAll(reader)
-}
-
-// 更新响应体
-//
-// 修改响应体、更新Content-Length
-func updateBody(rw *http.Response, content []byte) error {
-	encoding := rw.Header.Get("Content-Encoding")
-	var (
-		compressed bytes.Buffer
-		writer     io.Writer
-	)
-
-	// 根据原始编码选择压缩方式
-	switch encoding {
-	case "gzip":
-		logging.Debug("使用 GZIP 重新编码数据")
-		writer = gzip.NewWriter(&compressed)
-
-	case "br":
-		logging.Debug("使用 Brotli 重新编码数据")
-		writer = brotli.NewWriter(&compressed)
-
-	case "": // 无压缩
-		logging.Debug("无压缩数据")
-		writer = &compressed
-
-	default:
-		logging.Warningf("不支持的重新编码：%s，将不对数据进行压缩编码", encoding)
-		rw.Header.Del("Content-Encoding")
-		writer = &compressed
-	}
-
-	if _, err := writer.Write(content); err != nil {
-		return fmt.Errorf("compression write error: %w", err)
-	}
-
-	// 显式关闭以确保数据完整写入 buffer
-	if gw, ok := writer.(*gzip.Writer); ok {
-		if err := gw.Close(); err != nil {
-			return fmt.Errorf("gzip close error: %w", err)
-		}
-	} else if bw, ok := writer.(*brotli.Writer); ok {
-		if err := bw.Close(); err != nil {
-			return fmt.Errorf("brotli close error: %w", err)
-		}
-	}
-
-	// 设置新 Body
-	rw.Body = io.NopCloser(bytes.NewReader(compressed.Bytes()))
-	rw.ContentLength = int64(compressed.Len())
-	rw.Header.Set("Content-Length", strconv.Itoa(compressed.Len())) // 更新响应头
-
-	return nil
 }
 
 const (
