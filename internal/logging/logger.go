@@ -44,6 +44,14 @@ func AccessLog(format string, args ...any) {
 	accessLogger.Infof(format, args...)
 }
 
+func AccessDebugf(format string, args ...any) {
+	accessLogger.Debugf(format, args...)
+}
+
+func AccessWarningf(format string, args ...any) {
+	accessLogger.Warningf(format, args...)
+}
+
 // 服务日志
 //
 // Debug 级别日志
