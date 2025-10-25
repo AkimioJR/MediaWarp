@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ImageCache(ttl *time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
-	cachePool, err := bigcache.NewBigCache(bigcache.DefaultConfig(*ttl))
+func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
+	cachePool, err := bigcache.NewBigCache(bigcache.DefaultConfig(ttl))
 	if err != nil {
 		panic(fmt.Sprintf("create image cache pool failed: %v", err))
 	}
