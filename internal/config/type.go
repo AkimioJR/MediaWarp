@@ -39,6 +39,7 @@ type CacheSetting struct {
 	Enable      bool          `yaml:"enable"`
 	HTTPStrmTTL time.Duration `yaml:"http_strm_ttl"`
 	AlistAPITTL time.Duration `yaml:"alist_api_ttl"`
+	ImageTTL    time.Duration `yaml:"image_ttl"`
 }
 
 // Web前端自定义设置
