@@ -68,3 +68,5 @@ func (l *LoggerAccessFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	)
 	return b.Bytes(), nil
 }
+
+var _ logrus.Formatter = (*LoggerAccessFormatter)(nil)
