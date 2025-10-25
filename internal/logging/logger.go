@@ -100,5 +100,6 @@ func Errorf(format string, args ...any) {
 //
 // 设置日志级别
 func SetLevel(level logrus.Level) {
+	accessLogger.SetLevel(level)
 	serviceLogger.SetLevel(level)
 }
