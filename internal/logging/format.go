@@ -14,19 +14,7 @@ type LoggerServiceFormatter struct{}
 
 func (l *LoggerServiceFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	// 根据日志级别设置颜色
-	var colorCode uint8
-	switch entry.Level {
-	case logrus.DebugLevel:
-		colorCode = constants.ColorBlue
-	case logrus.InfoLevel:
-		colorCode = constants.ColorGreen
-	case logrus.WarnLevel:
-		colorCode = constants.ColorYellow
-	case logrus.ErrorLevel:
-		colorCode = constants.ColorRed
-	default:
-		colorCode = constants.ColorGray
-	}
+	colorCode := getLogColor(entry.Level)
 
 	// 设置文本Buffer
 	var b *bytes.Buffer
@@ -62,11 +50,25 @@ func (l *LoggerAccessFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b = entry.Buffer
 	}
 
-	fmt.Fprint(
-		b,
-		entry.Message+"\n",
-	)
+	b.WriteString(entry.Message + "\n")
 	return b.Bytes(), nil
 }
 
 var _ logrus.Formatter = (*LoggerAccessFormatter)(nil)
+
+func getLogColor(level logrus.Level) uint8 {
+	var colorCode uint8
+	switch level {
+	case logrus.DebugLevel:
+		colorCode = constants.ColorBlue
+	case logrus.InfoLevel:
+		colorCode = constants.ColorGreen
+	case logrus.WarnLevel:
+		colorCode = constants.ColorYellow
+	case logrus.ErrorLevel:
+		colorCode = constants.ColorRed
+	default:
+		colorCode = constants.ColorGray
+	}
+	return colorCode
+}
