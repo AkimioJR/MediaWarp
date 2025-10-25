@@ -4,6 +4,7 @@ import (
 	"MediaWarp/internal/config"
 	"io"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,15 +42,15 @@ func Init() {
 //
 // 默认日志级别为 Info
 func AccessLog(format string, args ...any) {
-	accessLogger.Infof(format, args...)
+	accessLogger.Info(formatAccessLog(nil, logrus.InfoLevel, format, args...))
 }
 
-func AccessDebugf(format string, args ...any) {
-	accessLogger.Debugf(format, args...)
+func AccessDebugf(ctx *gin.Context, format string, args ...any) {
+	accessLogger.Debug(formatAccessLog(ctx, logrus.DebugLevel, format, args...))
 }
 
-func AccessWarningf(format string, args ...any) {
-	accessLogger.Warningf(format, args...)
+func AccessWarningf(ctx *gin.Context, format string, args ...any) {
+	accessLogger.Warning(formatAccessLog(ctx, logrus.WarnLevel, format, args...))
 }
 
 // 服务日志

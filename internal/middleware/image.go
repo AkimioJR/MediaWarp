@@ -17,6 +17,7 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 	if err != nil {
 		panic(fmt.Sprintf("create image cache pool failed: %v", err))
 	}
+	logging.Debugf("图片缓存中间件已启用, TTL: %s", ttl.String())
 
 	return func(ctx *gin.Context) {
 		if ctx.Request.Method != http.MethodGet || !reg.MatchString(ctx.Request.URL.Path) {
@@ -24,17 +25,18 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 			return
 		}
 
-		logging.AccessDebugf("请求: %s 命中图片缓存正则表达式", ctx.Request.URL.Path)
+		logging.AccessDebugf(ctx, "命中图片缓存正则表达式")
 
 		cacheKey := getCacheKey(ctx)
+		logging.AccessDebugf(ctx, "Cache Key: "+cacheKey)
 		if cacheByte, err := cachePool.Get(cacheKey); err == nil {
 			if cacheData, err := ParseCacheData(cacheByte); err == nil {
-				logging.AccessDebugf("请求: %s 命中缓存", ctx.Request.URL.Path)
+				logging.AccessDebugf(ctx, "命中缓存")
 				cacheData.WriteResponse(ctx)
 				ctx.Abort()
 				return
 			} else {
-				logging.AccessWarningf("请求: %s 解析缓存失败: %v", ctx.Request.URL.Path, err)
+				logging.AccessWarningf(ctx, "解析缓存失败: %v", err)
 			}
 		}
 
@@ -57,13 +59,13 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 			if cacheByte, err := cacheData.Json(); err == nil {
 				err = cachePool.Set(cacheKey, cacheByte)
 				if err != nil {
-					logging.AccessWarningf("请求: %s 写入缓存失败: %v", ctx.Request.URL.Path, err)
+					logging.AccessWarningf(ctx, "写入缓存失败: %v", err)
 				} else {
-					logging.AccessDebugf("请求: %s 写入缓存成功", ctx.Request.URL.Path)
+					logging.AccessDebugf(ctx, "写入缓存成功")
 				}
 			}
 		} else {
-			logging.AccessDebugf("请求: %s 响应码为: %d, 不进行缓存", ctx.Request.URL.Path, code)
+			logging.AccessDebugf(ctx, "响应码为: %d, 不进行缓存", code)
 		}
 	}
 }

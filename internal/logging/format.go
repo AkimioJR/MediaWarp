@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
@@ -70,4 +71,20 @@ func getLogColor(level logrus.Level) constants.Color {
 		colorCode = constants.ColorGray
 	}
 	return colorCode
+}
+
+func formatAccessLog(ctx *gin.Context, level logrus.Level, format string, args ...any) string {
+	if ctx == nil { // 访问 Log
+		return fmt.Sprintf(format, args...)
+	}
+
+	var b strings.Builder
+	b.WriteString(getLogColor(level).ColorString("【" + strings.ToUpper(level.String()) + "】"))
+	b.WriteString(time.Now().Format(time.DateTime))
+	b.WriteString(" | ")
+	b.WriteString(ctx.Request.URL.Path)
+	b.WriteString(" | ")
+	b.WriteString(fmt.Sprintf(format, args...))
+
+	return b.String()
 }
