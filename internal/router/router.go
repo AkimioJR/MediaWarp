@@ -47,8 +47,8 @@ func InitRouter() *gin.Engine {
 			}
 		}
 	}
-
-	ginR.NoRoute(getRegexpRouterHandler())
+	mediaServerHandler := handler.GetMediaServer()
+	ginR.NoRoute(middleware.ImageCache(config.Cache.ImageTTL, mediaServerHandler.GetImageCacheRegexp()), getRegexpRouterHandler())
 	return ginR
 }
 
