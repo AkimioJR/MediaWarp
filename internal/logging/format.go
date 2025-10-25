@@ -82,7 +82,7 @@ func formatAccessLog(ctx *gin.Context, level logrus.Level, format string, args .
 	b.WriteString(getLogColor(level).ColorString("【" + strings.ToUpper(level.String()) + "】"))
 	b.WriteString(time.Now().Format(time.DateTime))
 	b.WriteString(" | ")
-	b.WriteString(ctx.Request.URL.Path)
+	b.WriteString(ctx.ClientIP() + " \"" + ctx.Request.URL.Path + "\"")
 	b.WriteString(" | ")
 	b.WriteString(fmt.Sprintf(format, args...))
 
