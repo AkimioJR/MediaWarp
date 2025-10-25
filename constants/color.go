@@ -1,5 +1,7 @@
 package constants
 
+import "fmt"
+
 type Color uint8
 
 // 基础颜色枚举
@@ -13,6 +15,10 @@ const (
 	ColorCyan                // 青色
 	ColorGray                // 灰色
 )
+
+func (c Color) ColorString(s string) string {
+	return fmt.Sprintf("\033[3%dm%s\033[0m", c, s)
+}
 
 // HTTP 状态码对应颜色
 const (

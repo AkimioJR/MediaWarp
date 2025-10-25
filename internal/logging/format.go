@@ -28,9 +28,8 @@ func (l *LoggerServiceFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	fmt.Fprintf(
 		b,
-		"\033[3%dm【%s】\033[0m\t%s | %s\n", // 长度需要算是上控制字符的长度
-		colorCode,
-		strings.ToUpper(entry.Level.String()),
+		"%s\t%s | %s\n", // 长度需要算是上控制字符的长度
+		colorCode.ColorString("【"+strings.ToUpper(entry.Level.String())+"】"),
 		formatTime,
 		entry.Message,
 	)
