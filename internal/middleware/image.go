@@ -25,7 +25,7 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 			return
 		}
 
-		logging.AccessDebugf(ctx, "命中图片缓存正则表达式")
+		logging.AccessDebugf(ctx, "命中图片缓存正则表达式: %s", reg.String())
 
 		cacheKey := getCacheKey(ctx)
 		logging.AccessDebugf(ctx, "Cache Key: "+cacheKey)
