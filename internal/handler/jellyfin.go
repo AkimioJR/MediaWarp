@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -84,6 +85,10 @@ func (jellyfinHandler *JellyfinHandler) ReverseProxy(rw http.ResponseWriter, req
 // 正则路由表
 func (jellyfinHandler *JellyfinHandler) GetRegexpRouteRules() []RegexpRouteRule {
 	return jellyfinHandler.routerRules
+}
+
+func (jellyfinHandler *JellyfinHandler) GetImageCacheRegexp() *regexp.Regexp {
+	return constants.JellyfinRegexp.Cache.Image
 }
 
 // 修改播放信息请求

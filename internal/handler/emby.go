@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -102,6 +103,10 @@ func (embyServerHandler *EmbyServerHandler) ReverseProxy(rw http.ResponseWriter,
 // 正则路由表
 func (embyServerHandler *EmbyServerHandler) GetRegexpRouteRules() []RegexpRouteRule {
 	return embyServerHandler.routerRules
+}
+
+func (embyServerHandler *EmbyServerHandler) GetImageCacheRegexp() *regexp.Regexp {
+	return constants.EmbyRegexp.Cache.Image
 }
 
 // 修改播放信息请求
