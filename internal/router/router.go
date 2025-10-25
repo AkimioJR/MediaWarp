@@ -65,7 +65,7 @@ func getRegexpRouterHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		for _, rule := range mediaServerHandler.GetRegexpRouteRules() {
 			if rule.Regexp.MatchString(ctx.Request.URL.Path) { // 不带查询参数的字符串：/emby/Items/54/Images/Primary
-				logging.Debugf("URL: %s 匹配成功 -> %s", ctx.Request.URL.Path, rule.Regexp.String())
+				logging.AccessDebugf(ctx, "匹配成功正则表达式: %s", rule.Regexp.String())
 
 				middlewareChain.Execute(rule.Handler)(ctx)
 				return
