@@ -56,8 +56,8 @@ func (l *LoggerAccessFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 var _ logrus.Formatter = (*LoggerAccessFormatter)(nil)
 
-func getLogColor(level logrus.Level) uint8 {
-	var colorCode uint8
+func getLogColor(level logrus.Level) constants.Color {
+	var colorCode constants.Color
 	switch level {
 	case logrus.DebugLevel:
 		colorCode = constants.ColorBlue

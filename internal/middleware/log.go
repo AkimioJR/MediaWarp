@@ -41,8 +41,8 @@ func Logger() gin.HandlerFunc {
 }
 
 // 根据Http状态码和Http请求方法获取颜色
-func getColor(statusCode int, method string) (uint8, uint8) {
-	var statusColor, methodColor uint8
+func getColor(statusCode int, method string) (constants.Color, constants.Color) {
+	var statusColor, methodColor constants.Color
 	switch {
 	case statusCode >= http.StatusOK && statusCode < http.StatusMultipleChoices:
 		statusColor = constants.StatusCode200Color

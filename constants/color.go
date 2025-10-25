@@ -1,8 +1,10 @@
 package constants
 
+type Color uint8
+
 // 基础颜色枚举
 const (
-	ColorBlack  uint8 = iota // 黑色
+	ColorBlack  Color = iota // 黑色
 	ColorRed                 // 红色
 	ColorGreen               // 绿色
 	ColorYellow              // 黄色
