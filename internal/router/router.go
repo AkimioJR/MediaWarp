@@ -47,12 +47,33 @@ func InitRouter() *gin.Engine {
 			}
 		}
 	}
-	mediaServerHandler := handler.GetMediaServer()
-	ginR.NoRoute(
-		middleware.ImageCache(config.Cache.ImageTTL, mediaServerHandler.GetImageCacheRegexp()),
-		middleware.SubtitleCache(config.Cache.SubtitleTTL, mediaServerHandler.GetSubtitleCacheRegexp()),
-		getRegexpRouterHandler(),
-	)
+
+	handlers := make(gin.HandlersChain, 0, 3)
+	if config.Cache.Enable {
+		mediaServerHandler := handler.GetMediaServer()
+		{
+			if config.Cache.ImageTTL > 0 {
+				logging.Infof("图片缓存中间件已启用, TTL: %s", config.Cache.ImageTTL.String())
+				handlers = append(handlers, middleware.ImageCache(config.Cache.ImageTTL, mediaServerHandler.GetImageCacheRegexp()))
+			} else {
+				logging.Infof("图片缓存中间件未启用, TTL: %s", config.Cache.ImageTTL.String())
+			}
+		}
+
+		{
+			if config.Cache.SubtitleTTL > 0 {
+				logging.Infof("字幕缓存中间件已启用, TTL: %s", config.Cache.SubtitleTTL.String())
+				handlers = append(handlers, middleware.SubtitleCache(config.Cache.SubtitleTTL, mediaServerHandler.GetSubtitleCacheRegexp()))
+			} else {
+				logging.Infof("字幕缓存中间件未启用, TTL: %s", config.Cache.SubtitleTTL.String())
+			}
+		}
+	} else {
+		logging.Info("全局缓存未启用, 未添加缓存中间件")
+	}
+
+	handlers = append(handlers, getRegexpRouterHandler())
+	ginR.NoRoute(handlers...)
 	return ginR
 }
 
