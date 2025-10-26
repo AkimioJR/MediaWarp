@@ -4,7 +4,6 @@ import (
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
 	"MediaWarp/utils"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -97,11 +96,10 @@ func (alistServer *AlistServer) getToken() (string, error) {
 	return loginData.Token, nil
 }
 
-func doRequest[T any](alistServer *AlistServer, method string, path string, reqBody io.Reader, needToken bool, needCache bool) (*T, error) {
+func doRequest[T any](alistServer *AlistServer, r Request) (*T, error) {
 	var resp AlistResponse[T]
-
-	cacheKey := method + "|" + path
-	if needCache && alistServer.cache != nil {
+	cacheKey := r.GetCacheKey()
+	if cacheKey != "" && alistServer.cache != nil {
 		if data, err := alistServer.cache.Get(cacheKey); err == nil {
 			err = json.Unmarshal(data, &resp)
 			if err != nil {
@@ -110,14 +108,11 @@ func doRequest[T any](alistServer *AlistServer, method string, path string, reqB
 			return &resp.Data, nil
 		}
 	}
-	var url = alistServer.GetEndpoint() + path
-	req, err := http.NewRequest(method, url, reqBody)
-	if err != nil {
-		return nil, fmt.Errorf("创建请求失败: %w", err)
-	}
+
+	req := newHTTPReq(alistServer.GetEndpoint(), r)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	if needToken {
+	if r.NeedAuth() {
 		token, err := alistServer.getToken()
 		if err != nil {
 			return nil, err
@@ -145,7 +140,7 @@ func doRequest[T any](alistServer *AlistServer, method string, path string, reqB
 		return nil, fmt.Errorf("请求失败，HTTP 状态码: %d, 相应状态码: %d, 相应信息: %s", res.StatusCode, resp.Code, resp.Message)
 	}
 
-	if needCache && alistServer.cache != nil {
+	if cacheKey != "" && alistServer.cache != nil {
 		err = alistServer.cache.Set(cacheKey, data)
 		if err != nil {
 			return nil, fmt.Errorf("缓存响应体失败: %w", err)
@@ -163,20 +158,7 @@ func (alistServer *AlistServer) authLogin() (*AuthLoginData, error) {
 		Username: alistServer.GetUsername(),
 		Password: alistServer.password,
 	}
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("序列化登录请求数据失败: %w", err)
-	}
-	payload := bytes.NewReader(reqData)
-
-	data, err := doRequest[AuthLoginData](
-		alistServer,
-		http.MethodPost,
-		"/api/auth/login",
-		payload,
-		false,
-		false,
-	)
+	data, err := doRequest[AuthLoginData](alistServer, &req)
 	if err != nil {
 		return nil, fmt.Errorf("登录失败: %w", err)
 	}
@@ -186,20 +168,7 @@ func (alistServer *AlistServer) authLogin() (*AuthLoginData, error) {
 
 // 获取某个文件/目录信息
 func (alistServer *AlistServer) FsGet(req *FsGetRequest) (*FsGetData, error) {
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("序列化请求数据失败: %w", err)
-	}
-
-	payload := bytes.NewReader(reqData)
-	respData, err := doRequest[FsGetData](
-		alistServer,
-		http.MethodPost,
-		"/api/fs/get",
-		payload,
-		true,
-		true,
-	)
+	respData, err := doRequest[FsGetData](alistServer, req)
 	if err != nil {
 		return nil, fmt.Errorf("获取文件/目录信息失败: %w", err)
 	}
@@ -207,15 +176,7 @@ func (alistServer *AlistServer) FsGet(req *FsGetRequest) (*FsGetData, error) {
 }
 
 func (alistServer *AlistServer) Me() (*UserInfoData, error) {
-
-	data, err := doRequest[UserInfoData](
-		alistServer,
-		http.MethodGet,
-		"/api/me",
-		nil,
-		true,
-		true,
-	)
+	data, err := doRequest[UserInfoData](alistServer, &MeRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("获取用户信息失败: %w", err)
 	}
