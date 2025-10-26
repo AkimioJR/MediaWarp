@@ -1,6 +1,9 @@
 package constants
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Color uint8
 
@@ -18,6 +21,10 @@ const (
 
 func (c Color) ColorString(s string) string {
 	return fmt.Sprintf("\033[3%dm%s\033[0m", c, s)
+}
+
+func (c Color) ColorBackground(s string) string {
+	return "\033[4" + strconv.Itoa(int(c)) + "m" + s + "\033[0m"
 }
 
 // HTTP 状态码对应颜色

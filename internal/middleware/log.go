@@ -32,9 +32,9 @@ func Logger() gin.HandlerFunc {
 		logging.AccessLogf(
 			"【Access】 %s |%s| %-10s |%s| %s \"%s\"",
 			startTime.Format(time.DateTime),
-			statusColor.ColorString(fmt.Sprintf(" %d ", statusCode)),
+			statusColor.ColorBackground(fmt.Sprintf(" %d ", statusCode)),
 			wasteTime,
-			methodColor.ColorString(fmt.Sprintf(" %-7s ", method)),
+			methodColor.ColorBackground(fmt.Sprintf(" %-7s ", method)),
 			clientIP,
 			path,
 		)
