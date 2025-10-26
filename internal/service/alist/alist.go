@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/http"
 	"path"
-	"strings"
 	"sync"
 	"time"
 
@@ -160,9 +159,15 @@ func doRequest[T any](alistServer *AlistServer, method string, path string, reqB
 
 // 登录Alist（获取一个新的Token）
 func (alistServer *AlistServer) authLogin() (*AuthLoginData, error) {
-	var (
-		payload = strings.NewReader(fmt.Sprintf(`{"username": "%s","password": "%s"}`, alistServer.GetUsername(), alistServer.password))
-	)
+	req := AuthLoginRequest{
+		Username: alistServer.GetUsername(),
+		Password: alistServer.password,
+	}
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("序列化登录请求数据失败: %w", err)
+	}
+	payload := bytes.NewReader(reqData)
 
 	data, err := doRequest[AuthLoginData](
 		alistServer,

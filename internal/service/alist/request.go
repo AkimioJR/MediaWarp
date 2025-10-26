@@ -7,3 +7,8 @@ type FsGetRequest struct {
 	PerPage  uint32 `json:"per_page"`
 	Refresh  bool   `json:"refresh"`
 }
+
+type AuthLoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
