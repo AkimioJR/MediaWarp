@@ -23,6 +23,7 @@ cache:                                        # 缓存相关设置
   http_strm_ttl: 1m                           # 重定向缓存有效期（当启用 http_strm 中的 final_url 配置项时才生效）
   alist_api_ttl: 10m                          # Alist API 缓存有效期
   image_ttl: 3d                               # 图片缓存有效时间
+  subtitle_ttl: 31d                           # 字幕缓存有效时间
 
 web:                                        # Web 页面修改相关设置
   enable: false                             # 总开关

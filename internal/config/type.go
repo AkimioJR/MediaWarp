@@ -40,6 +40,7 @@ type CacheSetting struct {
 	HTTPStrmTTL time.Duration `yaml:"http_strm_ttl"`
 	AlistAPITTL time.Duration `yaml:"alist_api_ttl"`
 	ImageTTL    time.Duration `yaml:"image_ttl"`
+	SubtitleTTL time.Duration `yaml:"subtitle_ttl"`
 }
 
 // Web前端自定义设置
