@@ -136,7 +136,7 @@ func doRequest[T any](alistServer *AlistServer, r Request) (*T, error) {
 	}
 
 	if resp.Code != http.StatusOK {
-		return nil, fmt.Errorf("请求失败，HTTP 状态码: %d, 相应状态码: %d, 相应信息: %s", res.StatusCode, resp.Code, resp.Message)
+		return nil, fmt.Errorf("请求失败，HTTP 状态码: %d, 响应状态码: %d, 响应信息: %s", res.StatusCode, resp.Code, resp.Message)
 	}
 
 	if cacheKey != "" && alistServer.cache != nil {
