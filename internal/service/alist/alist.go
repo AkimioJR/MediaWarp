@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -196,9 +197,11 @@ func (alistServer *AlistServer) GetFileURL(p string, isRawURL bool) (string, err
 	if err != nil {
 		return "", fmt.Errorf("获取用户当前信息失败：%w", err)
 	}
-	var sign string
+	var url strings.Builder
+	url.WriteString(alistServer.GetEndpoint())
 	if fileData.Sign != "" {
-		sign = "?sign=" + fileData.Sign
+		url.WriteString("?sign=" + fileData.Sign)
 	}
-	return alistServer.GetEndpoint() + path.Join("/d", userInfo.BasePath, p) + sign, nil
+	url.WriteString(path.Join("/d", userInfo.BasePath, p))
+	return url.String(), nil
 }
