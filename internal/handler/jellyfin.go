@@ -91,6 +91,10 @@ func (jellyfinHandler *JellyfinHandler) GetImageCacheRegexp() *regexp.Regexp {
 	return constants.JellyfinRegexp.Cache.Image
 }
 
+func (JellyfinHandler) GetSubtitleCacheRexp() *regexp.Regexp {
+	return constants.JellyfinRegexp.Cache.Subtitle
+}
+
 // 修改播放信息请求
 //
 // /Items/:itemId

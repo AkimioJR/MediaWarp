@@ -109,6 +109,10 @@ func (embyServerHandler *EmbyServerHandler) GetImageCacheRegexp() *regexp.Regexp
 	return constants.EmbyRegexp.Cache.Image
 }
 
+func (*EmbyServerHandler) GetSubtitleCacheRexp() *regexp.Regexp {
+	return constants.EmbyRegexp.Cache.Subtitle
+}
+
 // 修改播放信息请求
 //
 // /Items/:itemId/PlaybackInfo

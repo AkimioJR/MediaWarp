@@ -13,6 +13,7 @@ type MediaServerHandler interface {
 	ReverseProxy(http.ResponseWriter, *http.Request) // 转发请求至上游服务器
 	GetRegexpRouteRules() []RegexpRouteRule          // 获取正则路由表
 	GetImageCacheRegexp() *regexp.Regexp             // 获取图片缓存正则表达式
+	GetSubtitleCacheRexp() *regexp.Regexp            // 字幕缓存正则表达式
 }
 
 var mediaServerHandler MediaServerHandler
