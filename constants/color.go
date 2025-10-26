@@ -1,7 +1,6 @@
 package constants
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -20,7 +19,7 @@ const (
 )
 
 func (c Color) ColorString(s string) string {
-	return fmt.Sprintf("\033[3%dm%s\033[0m", c, s)
+	return "\033[3" + strconv.Itoa(int(c)) + "m" + s + "\033[0m"
 }
 
 func (c Color) ColorBackground(s string) string {
