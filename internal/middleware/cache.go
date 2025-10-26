@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"MediaWarp/internal/logging"
 	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
 
+	"github.com/allegro/bigcache"
 	"github.com/gin-gonic/gin"
 )
 
@@ -129,4 +131,49 @@ func getCacheKey(ctx *gin.Context) string {
 	// }
 
 	return path + query.Encode() // + headerStr
+}
+
+func getCacheBaseFunc(cachePool *bigcache.BigCache, cacheName string, reg string) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		cacheKey := getCacheKey(ctx)
+		logging.AccessDebugf(ctx, "命中 %s 缓存正则表达式: %s, CacheKey: %s", cacheName, reg, cacheKey)
+		if cacheByte, err := cachePool.Get(cacheKey); err == nil {
+			if cacheData, err := ParseCacheData(cacheByte); err == nil {
+				logging.AccessDebugf(ctx, "命中 %s 缓存: %s", cacheName, cacheKey)
+				cacheData.WriteResponse(ctx)
+				ctx.Abort()
+				return
+			} else {
+				logging.AccessWarningf(ctx, "解析 %s 缓存失败: %v", cacheName, err)
+			}
+		}
+
+		writer := &WriterWarp{
+			ResponseWriter: ctx.Writer,
+			Body:           &bytes.Buffer{},
+		}
+		ctx.Writer = writer
+
+		ctx.Next() // 处理请求
+
+		code := ctx.Writer.Status()
+		if code >= http.StatusOK && code < http.StatusMultipleChoices { // 响应是2xx的成功响应，更新缓存记录
+			cacheData := &CacheData{ // 创建缓存数据
+				StatusCode: code, //ctx.Request.Response.StatusCode,
+				Header:     ctx.Writer.Header().Clone(),
+				Body:       writer.Body.Bytes(),
+			}
+
+			if cacheByte, err := cacheData.Json(); err == nil {
+				err = cachePool.Set(cacheKey, cacheByte)
+				if err != nil {
+					logging.AccessWarningf(ctx, "写入 %s 缓存失败: %v", cacheName, err)
+				} else {
+					logging.AccessDebugf(ctx, "写入 %s 缓存成功", cacheName)
+				}
+			}
+		} else {
+			logging.AccessDebugf(ctx, "响应码为: %d, 不进行 %s 缓存", code, cacheName)
+		}
+	}
 }
