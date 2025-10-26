@@ -25,13 +25,13 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 			return
 		}
 
-		logging.AccessDebugf(ctx, "命中图片缓存正则表达式: %s", reg.String())
+		logging.AccessDebug(ctx, "命中图片缓存正则表达式: "+reg.String())
 
 		cacheKey := getCacheKey(ctx)
-		logging.AccessDebugf(ctx, "Cache Key: "+cacheKey)
+		logging.AccessDebug(ctx, "Cache Key: "+cacheKey)
 		if cacheByte, err := cachePool.Get(cacheKey); err == nil {
 			if cacheData, err := ParseCacheData(cacheByte); err == nil {
-				logging.AccessDebugf(ctx, "命中缓存")
+				logging.AccessDebug(ctx, "命中缓存: "+cacheKey)
 				cacheData.WriteResponse(ctx)
 				ctx.Abort()
 				return
@@ -61,7 +61,7 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 				if err != nil {
 					logging.AccessWarningf(ctx, "写入缓存失败: %v", err)
 				} else {
-					logging.AccessDebugf(ctx, "写入缓存成功")
+					logging.AccessDebug(ctx, "写入缓存成功")
 				}
 			}
 		} else {

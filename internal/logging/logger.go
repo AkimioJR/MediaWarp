@@ -46,8 +46,16 @@ func AccessLogf(format string, args ...any) {
 	accessLogger.Info(fmt.Sprintf(format, args...))
 }
 
+func AccessDebug(ctx *gin.Context, args ...any) {
+	accessLogger.Debug(formatAccessLog(ctx, logrus.DebugLevel, fmt.Sprint(args...)))
+}
+
 func AccessDebugf(ctx *gin.Context, format string, args ...any) {
 	accessLogger.Debug(formatAccessLog(ctx, logrus.DebugLevel, fmt.Sprintf(format, args...)))
+}
+
+func AccessWarning(ctx *gin.Context, args ...any) {
+	accessLogger.Warning(formatAccessLog(ctx, logrus.WarnLevel, fmt.Sprint(args...)))
 }
 
 func AccessWarningf(ctx *gin.Context, format string, args ...any) {
