@@ -109,7 +109,7 @@ func (embyServerHandler *EmbyServerHandler) GetImageCacheRegexp() *regexp.Regexp
 	return constants.EmbyRegexp.Cache.Image
 }
 
-func (*EmbyServerHandler) GetSubtitleCacheRexp() *regexp.Regexp {
+func (*EmbyServerHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 	return constants.EmbyRegexp.Cache.Subtitle
 }
 

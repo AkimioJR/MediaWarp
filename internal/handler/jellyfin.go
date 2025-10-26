@@ -91,7 +91,7 @@ func (jellyfinHandler *JellyfinHandler) GetImageCacheRegexp() *regexp.Regexp {
 	return constants.JellyfinRegexp.Cache.Image
 }
 
-func (JellyfinHandler) GetSubtitleCacheRexp() *regexp.Regexp {
+func (JellyfinHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 	return constants.JellyfinRegexp.Cache.Subtitle
 }
 
