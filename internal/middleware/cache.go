@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"sort"
 
-	"github.com/allegro/bigcache"
+	"github.com/allegro/bigcache/v3"
 	"github.com/gin-gonic/gin"
 )
 

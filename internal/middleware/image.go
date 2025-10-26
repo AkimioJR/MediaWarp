@@ -2,17 +2,18 @@ package middleware
 
 import (
 	"MediaWarp/internal/logging"
+	"context"
 	"fmt"
 	"net/http"
 	"regexp"
 	"time"
 
-	"github.com/allegro/bigcache"
+	"github.com/allegro/bigcache/v3"
 	"github.com/gin-gonic/gin"
 )
 
 func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
-	cachePool, err := bigcache.NewBigCache(bigcache.DefaultConfig(ttl))
+	cachePool, err := bigcache.New(context.Background(), bigcache.DefaultConfig(ttl))
 	if err != nil {
 		panic(fmt.Sprintf("create image cache pool failed: %v", err))
 	}

@@ -4,6 +4,7 @@ import (
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
 	"MediaWarp/utils"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/allegro/bigcache"
+	"github.com/allegro/bigcache/v3"
 )
 
 type alistToken struct {
@@ -45,7 +46,7 @@ func New(addr string, username string, password string, token *string) *AlistSer
 		}
 	}
 	if config.Cache.Enable && config.Cache.AlistAPITTL > 0 {
-		cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(config.Cache.AlistAPITTL))
+		cache, err := bigcache.New(context.Background(), bigcache.DefaultConfig(config.Cache.AlistAPITTL))
 		if err == nil {
 			s.cache = cache
 		} else {

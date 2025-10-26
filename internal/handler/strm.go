@@ -4,10 +4,11 @@ import (
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
 	"MediaWarp/internal/service"
+	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/allegro/bigcache"
+	"github.com/allegro/bigcache/v3"
 )
 
 type StrmHandlerFunc func(content string, ua string) string
@@ -16,7 +17,7 @@ func getHTTPStrmHandler() (StrmHandlerFunc, error) {
 	var cache *bigcache.BigCache
 	if config.Cache.Enable && config.Cache.HTTPStrmTTL > 0 && config.HTTPStrm.FinalURL {
 		var err error
-		cache, err = bigcache.NewBigCache(bigcache.DefaultConfig(config.Cache.HTTPStrmTTL))
+		cache, err = bigcache.New(context.Background(), bigcache.DefaultConfig(config.Cache.HTTPStrmTTL))
 		if err != nil {
 			return nil, fmt.Errorf("创建 HTTPStrm 缓存失败: %w", err)
 		}
