@@ -29,7 +29,7 @@ func Logger() gin.HandlerFunc {
 
 		statusColor, methodColor := getColor(statusCode, method)
 
-		logging.AccessLog(
+		logging.AccessLogf(
 			"【Access】 %s |%s| %-10s |%s| %s \"%s\"",
 			startTime.Format(time.DateTime),
 			statusColor.ColorString(fmt.Sprintf(" %d ", statusCode)),

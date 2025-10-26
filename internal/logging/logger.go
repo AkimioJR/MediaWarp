@@ -42,7 +42,7 @@ func Init() {
 // 访问日志
 //
 // 默认日志级别为 Info
-func AccessLog(format string, args ...any) {
+func AccessLogf(format string, args ...any) {
 	accessLogger.Info(fmt.Sprintf(format, args...))
 }
 
