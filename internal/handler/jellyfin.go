@@ -5,6 +5,7 @@ import (
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
 	"MediaWarp/internal/service"
+	"MediaWarp/internal/service/alist"
 	"MediaWarp/internal/service/jellyfin"
 	"MediaWarp/utils"
 	"bytes"
@@ -174,7 +175,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 					logging.Warning("获取 AlistServer 失败：", err)
 					continue
 				}
-				fsGetData, err := alistServer.FsGet(*mediasource.Path)
+				fsGetData, err := alistServer.FsGet(&alist.FsGetRequest{Path: *mediasource.Path, Page: 1})
 				if err != nil {
 					logging.Warning("请求 FsGet 失败：", err)
 					continue

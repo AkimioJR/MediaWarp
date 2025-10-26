@@ -4,6 +4,7 @@ import (
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
 	"MediaWarp/utils"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -179,11 +180,14 @@ func (alistServer *AlistServer) authLogin() (*AuthLoginData, error) {
 }
 
 // 获取某个文件/目录信息
-func (alistServer *AlistServer) FsGet(path string) (*FsGetData, error) {
-	var (
-		payload = strings.NewReader(fmt.Sprintf(`{"path": "%s","password": "","page": 1,"per_page": 0,"refresh": false}`, path))
-	)
-	data, err := doRequest[FsGetData](
+func (alistServer *AlistServer) FsGet(req *FsGetRequest) (*FsGetData, error) {
+	reqData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("序列化请求数据失败: %w", err)
+	}
+
+	payload := bytes.NewReader(reqData)
+	respData, err := doRequest[FsGetData](
 		alistServer,
 		http.MethodPost,
 		"/api/fs/get",
@@ -194,7 +198,7 @@ func (alistServer *AlistServer) FsGet(path string) (*FsGetData, error) {
 	if err != nil {
 		return nil, fmt.Errorf("获取文件/目录信息失败: %w", err)
 	}
-	return data, nil
+	return respData, nil
 }
 
 func (alistServer *AlistServer) Me() (*UserInfoData, error) {
@@ -215,7 +219,7 @@ func (alistServer *AlistServer) Me() (*UserInfoData, error) {
 
 // GetFileURL 获取文件的可访问 URL
 func (alistServer *AlistServer) GetFileURL(p string, isRawURL bool) (string, error) {
-	fileData, err := alistServer.FsGet(p)
+	fileData, err := alistServer.FsGet(&FsGetRequest{Path: p, Page: 1})
 	if err != nil {
 		return "", fmt.Errorf("获取文件信息失败：%w", err)
 	}
