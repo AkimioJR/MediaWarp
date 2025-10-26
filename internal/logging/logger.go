@@ -2,6 +2,7 @@ package logging
 
 import (
 	"MediaWarp/internal/config"
+	"fmt"
 	"io"
 
 	"github.com/gin-gonic/gin"
@@ -42,15 +43,15 @@ func Init() {
 //
 // 默认日志级别为 Info
 func AccessLog(format string, args ...any) {
-	accessLogger.Info(formatAccessLog(nil, logrus.InfoLevel, format, args...))
+	accessLogger.Info(fmt.Sprintf(format, args...))
 }
 
 func AccessDebugf(ctx *gin.Context, format string, args ...any) {
-	accessLogger.Debug(formatAccessLog(ctx, logrus.DebugLevel, format, args...))
+	accessLogger.Debug(formatAccessLog(ctx, logrus.DebugLevel, fmt.Sprintf(format, args...)))
 }
 
 func AccessWarningf(ctx *gin.Context, format string, args ...any) {
-	accessLogger.Warning(formatAccessLog(ctx, logrus.WarnLevel, format, args...))
+	accessLogger.Warning(formatAccessLog(ctx, logrus.WarnLevel, fmt.Sprintf(format, args...)))
 }
 
 // 服务日志

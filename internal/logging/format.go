@@ -73,18 +73,14 @@ func getLogColor(level logrus.Level) constants.Color {
 	return colorCode
 }
 
-func formatAccessLog(ctx *gin.Context, level logrus.Level, format string, args ...any) string {
-	if ctx == nil { // 访问 Log
-		return fmt.Sprintf(format, args...)
-	}
-
+func formatAccessLog(ctx *gin.Context, level logrus.Level, msg string) string {
 	var b strings.Builder
 	b.WriteString(getLogColor(level).ColorString("【" + strings.ToUpper(level.String()) + "】"))
 	b.WriteString(time.Now().Format(time.DateTime))
 	b.WriteString(" | ")
 	b.WriteString(ctx.ClientIP() + " \"" + ctx.Request.URL.Path + "\"")
 	b.WriteString(" | ")
-	b.WriteString(fmt.Sprintf(format, args...))
+	b.WriteString(msg)
 
 	return b.String()
 }
