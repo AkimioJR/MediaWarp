@@ -102,11 +102,9 @@ func doRequest[T any](alistServer *AlistServer, r Request) (*T, error) {
 	cacheKey := r.GetCacheKey()
 	if cacheKey != "" && alistServer.cache != nil {
 		if data, err := alistServer.cache.Get(cacheKey); err == nil {
-			err = json.Unmarshal(data, &resp)
-			if err != nil {
-				return nil, fmt.Errorf("反序列化缓存数据失败: %w", err)
+			if json.Unmarshal(data, &resp) == nil {
+				return &resp.Data, nil
 			}
-			return &resp.Data, nil
 		}
 	}
 
