@@ -65,7 +65,7 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin 的反向代理服务器**，修改
 - [x] 提供多种 Web 前端美化功能
 - [x] AlistStrm 实现 302 重定向
 - [x] 嵌入一些实用的 JavaScript 方便使用
-- [x] ~~缓存图片、字幕提高性能~~（为避免内存泄漏问题已经暂时移除）
+- [x] 缓存图片、字幕提高性能
 - [x] ~~多格式配置文件（优先级：JSON > TOML > YAML > YML > Java properties > Java props，格式参考[config.yaml.example](./config/config.yaml.example)）~~
 - [x] 支持通过 `--config` 参数指定配置文件地址
 - [x] ART 字幕转 ASS 字幕（仅 Emby）
