@@ -24,6 +24,8 @@ body:
           required: true
         - label: 我已经修改标题，将标题中的 描述 替换为我遇到的问题。
           required: true
+        - label: 我使用的 AkimioJR/MediaWarp 原版而非 MoviePilot 插件版本等非官方支持魔改分支，非官方版本的问题请向对应维护者反馈。
+          required: true
 
   - type: input
     id: version
