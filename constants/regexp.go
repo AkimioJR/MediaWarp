@@ -57,7 +57,7 @@ type JellyfinRegexps struct {
 
 var JellyfinRegexp = &JellyfinRegexps{
 	Router: JellyfinRouterRegexps{
-		VideosHandler:      regexp.MustCompile(`/Videos/\w+/(stream|original)(\.\w+)?$`), // /Videos/813a630bcf9c3f693a2ec8c498f868d2/stream /Videos/205953b114bb8c9dc2c7ba7e44b8024c/stream.mp4
+		VideosHandler:      regexp.MustCompile(`/Videos/[\w-]+/(stream|original)(\.\w+)?$`), // /Videos/813a630bcf9c3f693a2ec8c498f868d2/stream /Videos/205953b114bb8c9dc2c7ba7e44b8024c/stream.mp4
 		ModifyIndex:        regexp.MustCompile(`^/web/$`),
 		ModifyPlaybackInfo: regexp.MustCompile(`^/Items/\w+/PlaybackInfo$`),
 		ModifySubtitles:    regexp.MustCompile(`/Videos/\d+/\w+/subtitles$`),
