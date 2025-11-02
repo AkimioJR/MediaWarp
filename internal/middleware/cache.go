@@ -45,8 +45,10 @@ func ParseCacheData(data []byte) (*CacheData, error) {
 // 用于记录缓存数据
 type WriterWarp struct {
 	gin.ResponseWriter
-	Body *bytes.Buffer
+	Body bytes.Buffer
 }
+
+var _ gin.ResponseWriter = (*WriterWarp)(nil)
 
 func (w *WriterWarp) Write(data []byte) (int, error) {
 	w.Body.Write(data)
@@ -152,7 +154,7 @@ func getCacheBaseFunc(cachePool *bigcache.BigCache, cacheName string, reg string
 
 		writer := &WriterWarp{
 			ResponseWriter: ctx.Writer,
-			Body:           &bytes.Buffer{},
+			Body:           bytes.Buffer{},
 		}
 		ctx.Writer = writer
 
