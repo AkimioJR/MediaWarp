@@ -43,24 +43,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Push Dev Docker Image
-      #   run: |
-      #     docker images akimio/mediawarp
-      #     VERSION=$(docker images akimio/mediawarp | grep -oP 'akimio/mediawarp\s+\K[^\s]+(?=-amd64)')
-      #     echo $VERSION
-      #     IMAGE_NAME="akimio/mediawarp"
-      #     docker manifest create ${IMAGE_NAME}:${VERSION} \
-      #       ${IMAGE_NAME}:${VERSION}-amd64 \
-      #       ${IMAGE_NAME}:${VERSION}-arm64 \
-      #       ${IMAGE_NAME}:${VERSION}-armv6 \
-      #       ${IMAGE_NAME}:${VERSION}-armv7
+       - name: Push Dev Docker Image
+         run: |
+           docker images akimio/mediawarp
+           VERSION=$(docker images akimio/mediawarp | grep -oP 'akimio/mediawarp\s+\K[^\s]+(?=-amd64)')
+           echo $VERSION
+           IMAGE_NAME="akimio/mediawarp"
+           docker manifest create ${IMAGE_NAME}:${VERSION} \
+             ${IMAGE_NAME}:${VERSION}-amd64 \
+             ${IMAGE_NAME}:${VERSION}-arm64 \
+             ${IMAGE_NAME}:${VERSION}-armv6 \
+             ${IMAGE_NAME}:${VERSION}-armv7
 
-      #     docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-amd64 --arch amd64
-      #     docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-arm64 --arch arm64
-      #     docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-armv7 --arch arm --variant v7
-      #     docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-armv6 --arch arm --variant v6
+           docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-amd64 --arch amd64
+           docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-arm64 --arch arm64
+           docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-armv7 --arch arm --variant v7
+           docker manifest annotate ${IMAGE_NAME}:${VERSION} ${IMAGE_NAME}:${VERSION}-armv6 --arch arm --variant v6
 
-      #     docker manifest push ${IMAGE_NAME}:${VERSION}
+           docker manifest push ${IMAGE_NAME}:${VERSION}
 
       - name: Upload assets
         uses: actions/upload-artifact@v4
