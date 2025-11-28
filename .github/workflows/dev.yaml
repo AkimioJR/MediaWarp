@@ -43,8 +43,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-       - name: Push Dev Docker Image
-         run: |
+      - name: Push Dev Docker Image
+        run: |
            docker images akimio/mediawarp
            VERSION=$(docker images akimio/mediawarp | grep -oP 'akimio/mediawarp\s+\K[^\s]+(?=-amd64)')
            echo $VERSION
