@@ -1,42 +1,37 @@
 name: MediaWarp Docker Builder
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       APP_VERSION:
-        description: "用于Docker镜像版本的标签号"
+        description: "Docker镜像版本号 (例如 v0.1.5 或 snapshot)"
         required: true
-        type: string
+        default: "snapshot"
       IS_LATEST:
-        description: "是否发布为Docker镜像最新版本"
+        description: "是否标记为 latest 标签"
         required: true
-        type: boolean
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: true
-      DOCKERHUB_TOKEN:
-        required: true
+        default: false
 
 env:
-  APP_VERSION: ${{ inputs.APP_VERSION }}
-  IS_LATEST: ${{ inputs.IS_LATEST }}
+  APP_VERSION: ${{ github.event.inputs.APP_VERSION }}
+  IS_LATEST: ${{ github.event.inputs.IS_LATEST }}
 
 jobs:
   docker-builder:
     runs-on: ubuntu-latest
     steps:
-      - name: Show Information
+      - name: Show Inputs
         run: |
-          echo "Docker镜像版本的标签号：${{ env.APP_VERSION }}"
-          echo "是否发布为Docker镜像最新版本：${{ env.IS_LATEST }}"
+          echo "Docker镜像版本：${{ env.APP_VERSION }}"
+          echo "是否标记为 latest：${{ env.IS_LATEST }}"
 
-      - name: Clone Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
 
-      - name: Docker Meta
+      - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -57,7 +52,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Image
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -72,5 +67,5 @@ jobs:
             MEDIAWARP_VERSION=${{ env.APP_VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha, scope=${{ github.workflow }}-docker
-          cache-to: type=gha, scope=${{ github.workflow }}-docker
+          cache-from: type=gha, scope=docker-cache
+          cache-to: type=gha, scope=docker-cache, mode=max
