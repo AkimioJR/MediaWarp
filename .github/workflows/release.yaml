@@ -73,8 +73,7 @@ jobs:
             MEDIAWARP_VERSION=${{ env.APP_VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha, scope=docker-cache
-          cache-to: type=gha, scope=docker-cache, mode=max
+
 
       - name: Run GoReleaser Snapshot
         uses: goreleaser/goreleaser-action@v6
