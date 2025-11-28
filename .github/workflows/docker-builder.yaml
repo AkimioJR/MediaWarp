@@ -1,21 +1,6 @@
 name: MediaWarp Docker Builder
 
-on:
-  workflow_call:
-    inputs:
-      APP_VERSION:
-        description: "用于Docker镜像版本的标签号"
-        required: true
-        type: string
-      IS_LATEST:
-        description: "是否发布为Docker镜像最新版本"
-        required: true
-        type: boolean
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: true
-      DOCKERHUB_TOKEN:
-        required: true
+on: workflow_dispatch
 
 env:
   APP_VERSION: ${{ inputs.APP_VERSION }}
