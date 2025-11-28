@@ -1,37 +1,42 @@
 name: MediaWarp Docker Builder
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       APP_VERSION:
-        description: "Docker镜像版本号 (例如 v0.1.5 或 snapshot)"
+        description: "用于Docker镜像版本的标签号"
         required: true
-        default: "snapshot"
+        type: string
       IS_LATEST:
-        description: "是否标记为 latest 标签"
+        description: "是否发布为Docker镜像最新版本"
         required: true
-        default: false
+        type: boolean
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
 
 env:
-  APP_VERSION: ${{ github.event.inputs.APP_VERSION }}
-  IS_LATEST: ${{ github.event.inputs.IS_LATEST }}
+  APP_VERSION: ${{ inputs.APP_VERSION }}
+  IS_LATEST: ${{ inputs.IS_LATEST }}
 
 jobs:
   docker-builder:
     runs-on: ubuntu-latest
     steps:
-      - name: Show Inputs
+      - name: Show Information
         run: |
-          echo "Docker镜像版本：${{ env.APP_VERSION }}"
-          echo "是否标记为 latest：${{ env.IS_LATEST }}"
+          echo "Docker镜像版本的标签号：${{ env.APP_VERSION }}"
+          echo "是否发布为Docker镜像最新版本：${{ env.IS_LATEST }}"
 
-      - name: Checkout Repository
+      - name: Clone Repository
         uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
 
-      - name: Docker Metadata
+      - name: Docker Meta
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -52,7 +57,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build Image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -67,5 +72,5 @@ jobs:
             MEDIAWARP_VERSION=${{ env.APP_VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha, scope=docker-cache
-          cache-to: type=gha, scope=docker-cache, mode=max
+          cache-from: type=gha, scope=${{ github.workflow }}-docker
+          cache-to: type=gha, scope=${{ github.workflow }}-docker
