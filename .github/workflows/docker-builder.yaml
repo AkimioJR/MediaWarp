@@ -1,6 +1,18 @@
-name: MediaWarp Docker Builder
+name: MediaWarp Docker Build (Standalone)
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      APP_VERSION:
+        description: "用于Docker镜像版本的标签号"
+        required: true
+        type: string
+        default: '1.0.0'
+      IS_LATEST:
+        description: "是否发布为Docker镜像最新版本"
+        required: true
+        type: boolean
+        default: false
 
 env:
   APP_VERSION: ${{ inputs.APP_VERSION }}
@@ -42,7 +54,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Image
+      - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
