@@ -1,35 +1,18 @@
-name: MediaWarp Release
-
+name: MediaWarp Releaser
 on:
-  workflow_dispatch:
-    inputs:
-      APP_VERSION:
-        description: "Docker镜像版本号 (例如 v0.1.5 或 snapshot)"
-        required: false
-        default: "snapshot"
-      IS_LATEST:
-        description: "是否标记为 latest 标签"
-        required: false
-        default: false
+  push:
+    tags:
+      - v*
 
 permissions:
   contents: write
   packages: write
 
-env:
-  APP_VERSION: ${{ github.event.inputs.APP_VERSION }}
-  IS_LATEST: ${{ github.event.inputs.IS_LATEST }}
-
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Show Inputs
-        run: |
-          echo "Docker镜像版本：${{ env.APP_VERSION }}"
-          echo "是否标记为 latest：${{ env.IS_LATEST }}"
-
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
@@ -38,15 +21,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: "go.mod"
+          go-version-file: "go.mod" # 使用 go.mod 文件中的 golang 版本
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -54,37 +32,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker Metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/mediawarp
-          tags: |
-            type=raw,value=latest,enable=${{ env.IS_LATEST }}
-            type=raw,value=${{ env.APP_VERSION }},enable=true
-
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          platforms: |
-            linux/amd64
-            linux/arm/v7
-            linux/arm64/v8
-            linux/s390x
-          push: true
-          build-args: |
-            MEDIAWARP_VERSION=${{ env.APP_VERSION }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-
-      - name: Run GoReleaser Snapshot
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean --snapshot
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
