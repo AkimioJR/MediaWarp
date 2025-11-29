@@ -88,7 +88,7 @@ func (req *AuthLoginRequest) GetCacheKey() string {
 type MeRequest struct{}
 
 func (MeRequest) GetMethod() string {
-	return http.MethodPost
+    return http.MethodGet
 }
 
 func (MeRequest) GetAPIPath() string {
