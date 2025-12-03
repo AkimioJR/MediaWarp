@@ -25,9 +25,12 @@ type AlistClient struct {
 	endpoint string // 服务器入口 URL
 	username string // 用户名
 	password string // 密码
-	token    alistToken
-	client   *http.Client
-	cache    *bigcache.BigCache
+
+	userInfo UserInfoData
+
+	token  alistToken
+	client *http.Client
+	cache  *bigcache.BigCache
 }
 
 // 获得AlistClient实例
@@ -44,6 +47,7 @@ func NewAlistClient(addr string, username string, password string, token *string
 			expireAt: time.Time{},
 		}
 	}
+
 	if config.Cache.Enable && config.Cache.AlistAPITTL > 0 {
 		cache, err := bigcache.New(context.Background(), bigcache.DefaultConfig(config.Cache.AlistAPITTL))
 		if err == nil {
@@ -52,6 +56,13 @@ func NewAlistClient(addr string, username string, password string, token *string
 			return nil, fmt.Errorf("创建 Alist API 缓存失败: %w", err)
 		}
 	}
+
+	userInfo, err := client.Me()
+	if err != nil {
+		return nil, fmt.Errorf("获取用户当前信息失败：%w", err)
+	}
+	client.userInfo = *userInfo
+
 	return &client, nil
 }
 
@@ -190,15 +201,11 @@ func (client *AlistClient) GetFileURL(p string, isRawURL bool) (string, error) {
 	if isRawURL {
 		return fileData.RawURL, nil
 	}
-	userInfo, err := client.Me()
-	if err != nil {
-		return "", fmt.Errorf("获取用户当前信息失败：%w", err)
-	}
 	var url strings.Builder
 	url.WriteString(client.GetEndpoint())
 	if fileData.Sign != "" {
 		url.WriteString("?sign=" + fileData.Sign)
 	}
-	url.WriteString(path.Join("/d", userInfo.BasePath, p))
+	url.WriteString(path.Join("/d", client.userInfo.BasePath, p))
 	return url.String(), nil
 }
