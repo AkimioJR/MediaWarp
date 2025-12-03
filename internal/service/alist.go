@@ -25,17 +25,17 @@ func InitAlistClient() {
 //
 // 将Alist客户端注册到全局Map中
 func registerAlistClient(addr string, username string, password string, token *string) {
-	alistClient := alist.New(addr, username, password, token)
+	alistClient := alist.NewAlistClient(addr, username, password, token)
 	alistClientMap.Store(alistClient.GetEndpoint(), alistClient)
 }
 
 // 获取Alist客户端
 //
 // 从全局Map中获取Alist客户端
-func GetAlistClient(addr string) (*alist.AlistServer, error) {
+func GetAlistClient(addr string) (*alist.AlistClient, error) {
 	endpoint := utils.GetEndpoint(addr)
 	if client, ok := alistClientMap.Load(endpoint); ok {
-		return client.(*alist.AlistServer), nil
+		return client.(*alist.AlistClient), nil
 	}
 	return nil, fmt.Errorf("%s 未注册到 Alist 客户端列表中", endpoint)
 }
