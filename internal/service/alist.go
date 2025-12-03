@@ -2,6 +2,7 @@ package service
 
 import (
 	"MediaWarp/internal/config"
+	"MediaWarp/internal/logging"
 	"MediaWarp/internal/service/alist"
 	"MediaWarp/utils"
 	"fmt"
@@ -25,7 +26,11 @@ func InitAlistClient() {
 //
 // 将Alist客户端注册到全局Map中
 func registerAlistClient(addr string, username string, password string, token *string) {
-	alistClient := alist.NewAlistClient(addr, username, password, token)
+	alistClient, err := alist.NewAlistClient(addr, username, password, token)
+	if err != nil {
+		logging.Warningf("注册 Alist 客户端 %s 失败：%s", addr, err)
+		return
+	}
 	alistClientMap.Store(alistClient.GetEndpoint(), alistClient)
 }
 

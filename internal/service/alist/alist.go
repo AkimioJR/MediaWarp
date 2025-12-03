@@ -2,7 +2,6 @@ package alist
 
 import (
 	"MediaWarp/internal/config"
-	"MediaWarp/internal/logging"
 	"MediaWarp/utils"
 	"context"
 	"encoding/json"
@@ -32,15 +31,15 @@ type AlistClient struct {
 }
 
 // 获得AlistClient实例
-func NewAlistClient(addr string, username string, password string, token *string) *AlistClient {
-	s := AlistClient{
+func NewAlistClient(addr string, username string, password string, token *string) (*AlistClient, error) {
+	client := AlistClient{
 		endpoint: utils.GetEndpoint(addr),
 		username: username,
 		password: password,
 		client:   utils.GetHTTPClient(),
 	}
 	if token != nil {
-		s.token = alistToken{
+		client.token = alistToken{
 			value:    *token,
 			expireAt: time.Time{},
 		}
@@ -48,12 +47,12 @@ func NewAlistClient(addr string, username string, password string, token *string
 	if config.Cache.Enable && config.Cache.AlistAPITTL > 0 {
 		cache, err := bigcache.New(context.Background(), bigcache.DefaultConfig(config.Cache.AlistAPITTL))
 		if err == nil {
-			s.cache = cache
+			client.cache = cache
 		} else {
-			logging.Warning("创建 Alist API 缓存失败: ", err)
+			return nil, fmt.Errorf("创建 Alist API 缓存失败: %w", err)
 		}
 	}
-	return &s
+	return &client, nil
 }
 
 // 得到服务器入口
