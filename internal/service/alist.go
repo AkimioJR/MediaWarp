@@ -9,34 +9,33 @@ import (
 )
 
 var (
-	alistSeverMap sync.Map
+	alistClientMap sync.Map
 )
 
-// 初始化 Alist 服务器
-func InitAlistSerer() {
+// 初始化 Alist 客户端
+func InitAlistClient() {
 	if config.AlistStrm.Enable {
 		for _, alist := range config.AlistStrm.List {
-			registerAlistServer(alist.ADDR, alist.Username, alist.Password, alist.Token)
+			registerAlistClient(alist.ADDR, alist.Username, alist.Password, alist.Token)
 		}
 	}
 }
 
-// 注册Alist服务器
+// 注册Alist客户端
 //
-// 将Alist服务器注册到全局Map中
-func registerAlistServer(addr string, username string, password string, token *string) {
-	alistServer := alist.New(addr, username, password, token)
-	alistSeverMap.Store(alistServer.GetEndpoint(), alistServer)
+// 将Alist客户端注册到全局Map中
+func registerAlistClient(addr string, username string, password string, token *string) {
+	alistClient := alist.New(addr, username, password, token)
+	alistClientMap.Store(alistClient.GetEndpoint(), alistClient)
 }
 
-// 获取Alist服务器
+// 获取Alist客户端
 //
-// 从全局Map中获取Alist服务器
-// 若未找到则抛出panic
-func GetAlistServer(addr string) (*alist.AlistServer, error) {
+// 从全局Map中获取Alist客户端
+func GetAlistClient(addr string) (*alist.AlistServer, error) {
 	endpoint := utils.GetEndpoint(addr)
-	if server, ok := alistSeverMap.Load(endpoint); ok {
-		return server.(*alist.AlistServer), nil
+	if client, ok := alistClientMap.Load(endpoint); ok {
+		return client.(*alist.AlistServer), nil
 	}
-	return nil, fmt.Errorf("%s 未注册到 Alist 服务器列表中", endpoint)
+	return nil, fmt.Errorf("%s 未注册到 Alist 客户端列表中", endpoint)
 }

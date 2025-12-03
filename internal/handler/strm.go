@@ -63,12 +63,12 @@ func getHTTPStrmHandler() (StrmHandlerFunc, error) {
 }
 
 func alistStrmHandler(content string, alistAddr string) string {
-	alistServer, err := service.GetAlistServer(alistAddr)
+	alistClient, err := service.GetAlistClient(alistAddr)
 	if err != nil {
-		logging.Warning("获取 AlistServer 失败：", err)
+		logging.Warning("获取 AlistClient 失败：", err)
 		return ""
 	}
-	url, err := alistServer.GetFileURL(content, config.AlistStrm.RawURL)
+	url, err := alistClient.GetFileURL(content, config.AlistStrm.RawURL)
 	if err != nil {
 		logging.Warning("获取文件 URL 失败：", err)
 		return ""

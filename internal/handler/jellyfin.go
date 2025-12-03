@@ -170,12 +170,12 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 			}
 
 			if playbackInfoResponse.MediaSources[index].Size == nil {
-				alistServer, err := service.GetAlistServer(opt.(string))
+				alistClient, err := service.GetAlistClient(opt.(string))
 				if err != nil {
-					logging.Warning("获取 AlistServer 失败：", err)
+					logging.Warning("获取 AlistClient 失败：", err)
 					continue
 				}
-				fsGetData, err := alistServer.FsGet(&alist.FsGetRequest{Path: *mediasource.Path, Page: 1})
+				fsGetData, err := alistClient.FsGet(&alist.FsGetRequest{Path: *mediasource.Path, Page: 1})
 				if err != nil {
 					logging.Warning("请求 FsGet 失败：", err)
 					continue
