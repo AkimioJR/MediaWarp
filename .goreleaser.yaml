@@ -24,9 +24,9 @@ builds:
       - arm
       - arm64
     goarm:
-      - 5
-      - 6
-      - 7
+      - "5"
+      - "6"
+      - "7"
     ignore:
       - goos: windows
         goarm: 5
@@ -39,7 +39,7 @@ builds:
       - -s -w
       - -X MediaWarp/internal/config.appVersion={{ .Version }}
       - -X MediaWarp/internal/config.commitHash={{ .FullCommit }}
-      - -X MediaWarp/internal/config.buildDate={{ .Date}}
+      - -X MediaWarp/internal/config.buildDate={{ .Date }}
 
 dockers:
   - dockerfile: docker/Dockerfile.goreleaser
@@ -136,3 +136,4 @@ changelog:
       - "^test:"
       - "^build:"
       - "^release:"
+      - "^issue:"
