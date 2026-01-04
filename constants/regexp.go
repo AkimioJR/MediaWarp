@@ -38,8 +38,9 @@ var EmbyRegexp = &EmbyRegexps{
 	},
 	// /emby/Items/6/Images/Primary
 	// /emby/Items/13/Images/Primary
+	// /emby/Items/123/Images/Chapter/0
 	Cache: CacheRegexps{
-		Image:    regexp.MustCompile(`(?i)^(/emby)?/Items/\d+/Images`),
+		Image:    regexp.MustCompile(`(?i)^(/emby)?/Items/\d+/Images(/.*)?$`),
 		Subtitle: regexp.MustCompile(`(?i)/Videos/(.*)/Subtitles/(.*)/Stream\.(ass|ssa|srt|)?$`),
 	},
 }
@@ -65,7 +66,8 @@ var JellyfinRegexp = &JellyfinRegexps{
 	Cache: CacheRegexps{
 		// /Items/19ba9e43f0db12e2eea4294609ec1a0c/Images/Primary
 		// /Items/20524938b33d516922ccea207555315b/Images/Backdrop/0
-		Image: regexp.MustCompile(`(?i)/Items/\w+/Images`),
+		// /Items/abc123/Images/Chapter/0
+		Image: regexp.MustCompile(`(?i)/Items/\w+/Images(/.*)?$`),
 
 		// /Videos/6c252d46-952c-5b0d-5f0e-f6e3036c0a39/6c252d46952c5b0d5f0ef6e3036c0a39/Subtitles/2/0/Stream.ass
 		Subtitle: regexp.MustCompile(`(?i)/Videos/(.*)/Subtitles/(.*)/Stream\.(ass|ssa|srt|)?$`),

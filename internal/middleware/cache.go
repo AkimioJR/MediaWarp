@@ -67,6 +67,7 @@ var CacheKeyIgnoreQuery = []string{
 
 	// Emby
 	"playsessionid",
+	"tag", // 忽略 ImageTag 参数，防止 Emby 重启后缓存失效
 }
 
 // 计算Key时忽略的请求头
