@@ -266,7 +266,11 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 		mutex, _ := embyServerHandler.playbackInfoMutex.LoadOrStore(itemID, &sync.Mutex{})
 		mu = mutex.(*sync.Mutex)
 		mu.Lock()
-		defer mu.Unlock()
+		defer func() {
+			mu.Unlock()
+			// 清理mutex，防止内存泄漏
+			embyServerHandler.playbackInfoMutex.Delete(itemID)
+		}()
 		logging.Debugf("开始处理 item %s 的 VideosHandler 请求", itemID)
 	}
 
