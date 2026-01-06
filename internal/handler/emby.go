@@ -20,16 +20,18 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Emby服务器处理器
 type EmbyServerHandler struct {
-	server          *emby.EmbyServer       // Emby 服务器
-	routerRules     []RegexpRouteRule      // 正则路由规则
-	proxy           *httputil.ReverseProxy // 反向代理
-	httpStrmHandler StrmHandlerFunc
+	server            *emby.EmbyServer       // Emby 服务器
+	routerRules       []RegexpRouteRule      // 正则路由规则
+	proxy             *httputil.ReverseProxy // 反向代理
+	httpStrmHandler   StrmHandlerFunc
+	playbackInfoMutex sync.Map // 视频流处理并发控制，确保同一个 item ID 的重定向请求串行化，避免重复获取缓存
 }
 
 // 初始化
@@ -119,6 +121,16 @@ func (*EmbyServerHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 // /Items/:itemId/PlaybackInfo
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
 func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response) error {
+	// 检查 IsPlayback 参数，如果为 false 则不做修改直接返回
+	// 从响应的请求中获取参数，因为响应对象包含原始请求
+	// 使用不区分大小写的方式获取查询参数
+	isPlayback := getQueryValueCaseInsensitive(rw.Request.URL.Query(), "IsPlayback")
+	logging.Debugf("IsPlayback 参数值: '%s' (请求 URL: %s)", isPlayback, rw.Request.URL.String())
+	if strings.ToLower(isPlayback) == "false" {
+		logging.Debug("IsPlayback=false，跳过 PlaybackInfo 修改")
+		return nil
+	}
+
 	defer rw.Body.Close()
 	body, err := io.ReadAll(rw.Body)
 	if err != nil {
@@ -235,6 +247,29 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 	// EmbyServer >= 4.9 ====> mediaSourceID = mediasource_31
 	mediaSourceID := ctx.Query("mediasourceid")
 
+	// 从 URL 中提取 item ID（例如：/emby/videos/43609/stream 中的 43609）
+	var itemID string
+	if matches := constants.EmbyRegexp.Router.VideosHandler.FindStringSubmatch(orginalPath); len(matches) > 0 {
+		parts := strings.Split(orginalPath, "/")
+		for i, part := range parts {
+			if part == "videos" && i+1 < len(parts) {
+				itemID = parts[i+1]
+				break
+			}
+		}
+	}
+
+	// 并发控制：确保同一个 item ID 只有一个任务在运行
+	// 将整个处理流程放在锁内，避免重复查询和重复获取重定向 URL
+	var mu *sync.Mutex
+	if itemID != "" {
+		mutex, _ := embyServerHandler.playbackInfoMutex.LoadOrStore(itemID, &sync.Mutex{})
+		mu = mutex.(*sync.Mutex)
+		mu.Lock()
+		defer mu.Unlock()
+		logging.Debugf("开始处理 item %s 的 VideosHandler 请求", itemID)
+	}
+
 	logging.Debugf("请求 ItemsServiceQueryItem：%s", mediaSourceID)
 	itemResponse, err := embyServerHandler.server.ItemsServiceQueryItem(strings.Replace(mediaSourceID, "mediasource_", "", 1), 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
 	if err != nil {
@@ -257,6 +292,7 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 			switch strmFileType {
 			case constants.HTTPStrm:
 				if *mediasource.Protocol == emby.HTTP {
+					// httpStrmHandler 内部有缓存机制，锁确保串行化访问
 					ctx.Redirect(http.StatusFound, embyServerHandler.httpStrmHandler(*mediasource.Path, ctx.Request.UserAgent()))
 					return
 				}

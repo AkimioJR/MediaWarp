@@ -40,6 +40,22 @@ func responseModifyCreater(proxy *httputil.ReverseProxy, modifyResponseFN func(r
 	}
 }
 
+// 不区分大小写地获取查询参数值
+//
+// 从 url.Values 中查找指定键名的值，忽略大小写
+func getQueryValueCaseInsensitive(query url.Values, key string) string {
+	keyLower := strings.ToLower(key)
+	for k, v := range query {
+		if strings.ToLower(k) == keyLower {
+			if len(v) > 0 {
+				return v[0]
+			}
+			return ""
+		}
+	}
+	return ""
+}
+
 // 根据 Strm 文件路径识别 Strm 文件类型
 //
 // 返回 Strm 文件类型和一个可选配置
