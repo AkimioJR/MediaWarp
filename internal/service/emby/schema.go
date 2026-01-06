@@ -10,6 +10,7 @@ type PlaybackInfoResponse struct {
 	ErrorCode     *PlaybackErrorCode `json:"ErrorCode,omitempty"`
 	MediaSources  []MediaSourceInfo  `json:"MediaSources,omitempty"`
 	PlaySessionID *string            `json:"PlaySessionId,omitempty"`
+	Chapters      []ChapterInfo      `json:"Chapters,omitempty"`
 }
 
 // PlaybackErrorCode
@@ -212,6 +213,7 @@ type MediaSourceInfo struct {
 	AnalyzeDurationMS          *int64                    `json:"AnalyzeDurationMs,omitempty"`
 	Bitrate                    *int64                    `json:"Bitrate,omitempty"`
 	BufferMS                   *int64                    `json:"BufferMs,omitempty"`
+	Chapters                   []ChapterInfo             `json:"Chapters,omitempty"`
 	Container                  *string                   `json:"Container,omitempty"` // AlistStrm 显示 strm，普通视频和 HTTPStrm
 	ContainerStartTimeTicks    *int64                    `json:"ContainerStartTimeTicks,omitempty"`
 	DefaultAudioStreamIndex    *int64                    `json:"DefaultAudioStreamIndex,omitempty"`
