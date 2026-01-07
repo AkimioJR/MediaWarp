@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/gin-gonic/gin"
 )
@@ -94,7 +95,7 @@ func (jellyfinHandler *JellyfinHandler) GetImageCacheRegexp() *regexp.Regexp {
 	return constants.JellyfinRegexp.Cache.Image
 }
 
-func (JellyfinHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
+func (*JellyfinHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 	return constants.JellyfinRegexp.Cache.Subtitle
 }
 
@@ -234,12 +235,26 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 
 	// 并发控制：确保同一个 item ID 只有一个任务在运行
 	// 将整个处理流程放在锁内，避免重复查询和重复获取重定向 URL
-	var mu *sync.Mutex
+	var muWrapper *mutexWithRefCount
 	if itemID != "" {
-		mutex, _ := jellyfinHandler.playbackInfoMutex.LoadOrStore(itemID, &sync.Mutex{})
-		mu = mutex.(*sync.Mutex)
-		mu.Lock()
-		defer mu.Unlock()
+		// 加载或创建 mutex wrapper
+		value, _ := jellyfinHandler.playbackInfoMutex.LoadOrStore(itemID, &mutexWithRefCount{})
+		muWrapper = value.(*mutexWithRefCount)
+
+		// 增加引用计数
+		atomic.AddInt32(&muWrapper.refCount, 1)
+
+		// 锁定并处理
+		muWrapper.mu.Lock()
+		defer func() {
+			muWrapper.mu.Unlock()
+			// 减少引用计数
+			refCount := atomic.AddInt32(&muWrapper.refCount, -1)
+			// 如果没有其他 goroutine 在使用，删除这个 mutex 以避免内存泄漏
+			if refCount == 0 {
+				jellyfinHandler.playbackInfoMutex.Delete(itemID)
+			}
+		}()
 		logging.Debugf("开始处理 item %s 的 VideosHandler 请求", itemID)
 	}
 
