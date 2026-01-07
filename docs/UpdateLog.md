@@ -107,3 +107,6 @@
   - 修复 Alist API 调用问题 
   - 重构 Alist 相关命名
   - 提高 Alist 获取文件 URL 的性能
+- 2026.1.7: v0.1.7
+  - 修复 Emby 章节信息和缩略图显示问题 ([#79](https://github.com/AkimioJR/MediaWarp/issues/79))
+  - 修复某些播放器请求播放时多次请求非播放动作导致重定向链接获取，提高兼容性 ([#80](https://github.com/AkimioJR/MediaWarp/issues/80))
