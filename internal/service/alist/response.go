@@ -1,5 +1,9 @@
 package alist
 
+import (
+	"encoding/json"
+)
+
 type AlistResponse[T any] struct {
 	Code    int64  `json:"code"`    // 状态码
 	Data    T      `json:"data"`    // data
@@ -29,13 +33,33 @@ type FsGetData struct {
 }
 
 type UserInfoData struct {
-	BasePath   string  `json:"base_path"`  // 根目录
-	Disabled   bool    `json:"disabled"`   // 是否禁用
-	ID         int64   `json:"id"`         // id
-	Otp        bool    `json:"otp"`        // 是否开启二步验证
-	Password   string  `json:"password"`   // 密码
-	Permission int64   `json:"permission"` // 权限
-	Role       []int64 `json:"role"`       // 角色
-	SsoID      string  `json:"sso_id"`     // sso id
-	Username   string  `json:"username"`   // 用户名
+	BasePath   string     `json:"base_path"`  // 根目录
+	Disabled   bool       `json:"disabled"`   // 是否禁用
+	ID         int64      `json:"id"`         // id
+	Otp        bool       `json:"otp"`        // 是否开启二步验证
+	Password   string     `json:"password"`   // 密码
+	Permission int64      `json:"permission"` // 权限
+	Role       Int64Slice `json:"role"`       // 角色
+	SsoID      string     `json:"sso_id"`     // sso id
+	Username   string     `json:"username"`   // 用户名
+}
+
+type Int64Slice []int64
+
+func (s *Int64Slice) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 || string(data) == "null" {
+		*s = []int64{}
+		return nil
+	}
+	var single int64
+	if err := json.Unmarshal(data, &single); err == nil {
+		*s = []int64{single}
+		return nil
+	}
+	var arr []int64
+	if err := json.Unmarshal(data, &arr); err != nil {
+		return err
+	}
+	*s = arr
+	return nil
 }
