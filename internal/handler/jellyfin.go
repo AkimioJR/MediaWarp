@@ -20,19 +20,17 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
-	"sync/atomic"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Jellyfin 服务器处理器
 type JellyfinHandler struct {
-	server            *jellyfin.Jellyfin     // Jellyfin 服务器
-	routerRules       []RegexpRouteRule      // 正则路由规则
-	proxy             *httputil.ReverseProxy // 反向代理
-	httpStrmHandler   StrmHandlerFunc
-	playbackInfoMutex sync.Map // 视频流处理并发控制，确保同一个 item ID 的重定向请求串行化，避免重复获取缓存
+	server          *jellyfin.Jellyfin     // Jellyfin 服务器
+	routerRules     []RegexpRouteRule      // 正则路由规则
+	proxy           *httputil.ReverseProxy // 反向代理
+	httpStrmHandler StrmHandlerFunc
+	// playbackInfoMutex sync.Map // 视频流处理并发控制，确保同一个 item ID 的重定向请求串行化，避免重复获取缓存
 }
 
 func NewJellyfinHander(addr string, apiKey string) (*JellyfinHandler, error) {
@@ -104,15 +102,15 @@ func (*JellyfinHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 // /Items/:itemId
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
 func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
-	// 检查 IsPlayback 参数，如果为 false 则不做修改直接返回
-	// 从响应的请求中获取参数，因为响应对象包含原始请求
-	// 使用不区分大小写的方式获取查询参数
-	isPlayback := getQueryValueCaseInsensitive(rw.Request.URL.Query(), "IsPlayback")
-	logging.Debugf("IsPlayback 参数值: '%s' (请求 URL: %s)", isPlayback, rw.Request.URL.String())
-	if strings.ToLower(isPlayback) == "false" {
-		logging.Debug("IsPlayback=false，跳过 PlaybackInfo 修改")
-		return nil
-	}
+	// // 检查 IsPlayback 参数，如果为 false 则不做修改直接返回
+	// // 从响应的请求中获取参数，因为响应对象包含原始请求
+	// // 使用不区分大小写的方式获取查询参数
+	// isPlayback := getQueryValueCaseInsensitive(rw.Request.URL.Query(), "IsPlayback")
+	// logging.Debugf("IsPlayback 参数值: '%s' (请求 URL: %s)", isPlayback, rw.Request.URL.String())
+	// if strings.ToLower(isPlayback) == "false" {
+	// 	logging.Debug("IsPlayback=false，跳过 PlaybackInfo 修改")
+	// 	return nil
+	// }
 
 	defer rw.Body.Close()
 	data, err := io.ReadAll(rw.Body)
@@ -220,43 +218,43 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 		return
 	}
 
-	// 从 URL 中提取 item ID（例如：/Videos/813a630bcf9c3f693a2ec8c498f868d2/stream 中的 813a630bcf9c3f693a2ec8c498f868d2）
-	var itemID string
-	path := ctx.Request.URL.Path
-	if matches := constants.JellyfinRegexp.Router.VideosHandler.FindStringSubmatch(path); len(matches) > 0 {
-		parts := strings.Split(path, "/")
-		for i, part := range parts {
-			if part == "Videos" && i+1 < len(parts) {
-				itemID = parts[i+1]
-				break
-			}
-		}
-	}
+	// // 从 URL 中提取 item ID（例如：/Videos/813a630bcf9c3f693a2ec8c498f868d2/stream 中的 813a630bcf9c3f693a2ec8c498f868d2）
+	// var itemID string
+	// path := ctx.Request.URL.Path
+	// if matches := constants.JellyfinRegexp.Router.VideosHandler.FindStringSubmatch(path); len(matches) > 0 {
+	// 	parts := strings.Split(path, "/")
+	// 	for i, part := range parts {
+	// 		if part == "Videos" && i+1 < len(parts) {
+	// 			itemID = parts[i+1]
+	// 			break
+	// 		}
+	// 	}
+	// }
 
-	// 并发控制：确保同一个 item ID 只有一个任务在运行
-	// 将整个处理流程放在锁内，避免重复查询和重复获取重定向 URL
-	var muWrapper *mutexWithRefCount
-	if itemID != "" {
-		// 加载或创建 mutex wrapper
-		value, _ := jellyfinHandler.playbackInfoMutex.LoadOrStore(itemID, &mutexWithRefCount{})
-		muWrapper = value.(*mutexWithRefCount)
+	// // 并发控制：确保同一个 item ID 只有一个任务在运行
+	// // 将整个处理流程放在锁内，避免重复查询和重复获取重定向 URL
+	// var muWrapper *mutexWithRefCount
+	// if itemID != "" {
+	// 	// 加载或创建 mutex wrapper
+	// 	value, _ := jellyfinHandler.playbackInfoMutex.LoadOrStore(itemID, &mutexWithRefCount{})
+	// 	muWrapper = value.(*mutexWithRefCount)
 
-		// 增加引用计数
-		atomic.AddInt32(&muWrapper.refCount, 1)
+	// 	// 增加引用计数
+	// 	atomic.AddInt32(&muWrapper.refCount, 1)
 
-		// 锁定并处理
-		muWrapper.mu.Lock()
-		defer func() {
-			muWrapper.mu.Unlock()
-			// 减少引用计数
-			refCount := atomic.AddInt32(&muWrapper.refCount, -1)
-			// 如果没有其他 goroutine 在使用，删除这个 mutex 以避免内存泄漏
-			if refCount == 0 {
-				jellyfinHandler.playbackInfoMutex.Delete(itemID)
-			}
-		}()
-		logging.Debugf("开始处理 item %s 的 VideosHandler 请求", itemID)
-	}
+	// 	// 锁定并处理
+	// 	muWrapper.mu.Lock()
+	// 	defer func() {
+	// 		muWrapper.mu.Unlock()
+	// 		// 减少引用计数
+	// 		refCount := atomic.AddInt32(&muWrapper.refCount, -1)
+	// 		// 如果没有其他 goroutine 在使用，删除这个 mutex 以避免内存泄漏
+	// 		if refCount == 0 {
+	// 			jellyfinHandler.playbackInfoMutex.Delete(itemID)
+	// 		}
+	// 	}()
+	// 	logging.Debugf("开始处理 item %s 的 VideosHandler 请求", itemID)
+	// }
 
 	mediaSourceID := ctx.Query("mediasourceid")
 	logging.Debugf("请求 ItemsServiceQueryItem：%s", mediaSourceID)
