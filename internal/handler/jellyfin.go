@@ -138,7 +138,8 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且支持转码
 			if !config.HTTPStrm.TransCode {
 				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
-				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = true
+				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = false
+				*playbackInfoResponse.MediaSources[index].SupportsTranscoding = false
 				playbackInfoResponse.MediaSources[index].TranscodingURL = nil
 				playbackInfoResponse.MediaSources[index].TranscodingSubProtocol = nil
 				playbackInfoResponse.MediaSources[index].TranscodingContainer = nil
@@ -157,7 +158,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 		case constants.AlistStrm: // AlistStm 设置支持直链播放并且禁止转码
 			if !config.AlistStrm.TransCode {
 				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
-				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = true
+				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = false
 				*playbackInfoResponse.MediaSources[index].SupportsTranscoding = false
 				playbackInfoResponse.MediaSources[index].TranscodingURL = nil
 				playbackInfoResponse.MediaSources[index].TranscodingSubProtocol = nil
