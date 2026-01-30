@@ -110,3 +110,8 @@
 - 2026.1.7: v0.1.7
   - 修复 Emby 章节信息和缩略图显示问题 ([#79](https://github.com/AkimioJR/MediaWarp/issues/79))
   - 修复某些播放器请求播放时多次请求非播放动作导致重定向链接获取，提高兼容性 ([#80](https://github.com/AkimioJR/MediaWarp/issues/80))
+- 2026.1.30: v0.1.8
+  - 修复新版 alist API 响应数据类型变化导致的解析错误
+  - 移除 PlaybackInfo 控制流相关代码
+  - 禁用流式播放提高兼容性
+  - 重构 PlaybackInfo 响应修改控制流程，提高兼容性
