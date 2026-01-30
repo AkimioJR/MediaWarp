@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/sjson"
 )
 
 // Jellyfin 服务器处理器
@@ -119,6 +120,8 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 		return err
 	}
 
+	jsonChain := utils.NewFromBytesWithCopy(data, &sjson.Options{Optimistic: true, ReplaceInPlace: true})
+
 	var playbackInfoResponse jellyfin.PlaybackInfoResponse
 	if err = json.Unmarshal(data, &playbackInfoResponse); err != nil {
 		logging.Warning("解析 jellyfin.PlaybackInfoResponse JSON 错误：", err)
@@ -134,15 +137,26 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 		}
 		item := itemResponse.Items[0]
 		strmFileType, opt := recgonizeStrmFileType(*item.Path)
+		bsePath := "MediaSources." + strconv.Itoa(index) + "."
 		switch strmFileType {
 		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且支持转码
 			if !config.HTTPStrm.TransCode {
-				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
-				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = false
-				*playbackInfoResponse.MediaSources[index].SupportsTranscoding = false
-				playbackInfoResponse.MediaSources[index].TranscodingURL = nil
-				playbackInfoResponse.MediaSources[index].TranscodingSubProtocol = nil
-				playbackInfoResponse.MediaSources[index].TranscodingContainer = nil
+				jsonChain.Set(
+					bsePath+"SupportsDirectPlay",
+					true,
+				).Set(
+					bsePath+"SupportsDirectStream",
+					false,
+				).Set(
+					bsePath+"SupportsTranscoding",
+					false,
+				).Delete(
+					bsePath + "TranscodingUrl",
+				).Delete(
+					bsePath + "TranscodingSubProtocol",
+				).Delete(
+					bsePath + "TranscodingContainer",
+				)
 				if mediasource.DirectStreamURL != nil {
 					apikeypair, err := utils.ResolveEmbyAPIKVPairs(mediasource.DirectStreamURL)
 					if err != nil {
@@ -150,19 +164,32 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 						continue
 					}
 					directStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", *mediasource.ID, *mediasource.ID, apikeypair)
-					playbackInfoResponse.MediaSources[index].DirectStreamURL = &directStreamURL
+					jsonChain.Set(
+						bsePath+"DirectStreamUrl",
+						directStreamURL,
+					)
 					logging.Info(*mediasource.Name, " 强制禁止转码，直链播放链接为: ", directStreamURL)
 				}
 			}
 
 		case constants.AlistStrm: // AlistStm 设置支持直链播放并且禁止转码
 			if !config.AlistStrm.TransCode {
-				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
-				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = false
-				*playbackInfoResponse.MediaSources[index].SupportsTranscoding = false
-				playbackInfoResponse.MediaSources[index].TranscodingURL = nil
-				playbackInfoResponse.MediaSources[index].TranscodingSubProtocol = nil
-				playbackInfoResponse.MediaSources[index].TranscodingContainer = nil
+				jsonChain.Set(
+					bsePath+"SupportsDirectPlay",
+					true,
+				).Set(
+					bsePath+"SupportsDirectStream",
+					false,
+				).Set(
+					bsePath+"SupportsTranscoding",
+					false,
+				).Delete(
+					bsePath + "TranscodingUrl",
+				).Delete(
+					bsePath + "TranscodingSubProtocol",
+				).Delete(
+					bsePath + "TranscodingContainer",
+				)
 				directStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true", *mediasource.ID, *mediasource.ID)
 				if mediasource.DirectStreamURL != nil {
 					logging.Debugf("%s 原直链播放链接： %s", *mediasource.Name, *mediasource.DirectStreamURL)
@@ -173,9 +200,14 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 					}
 					directStreamURL += "&" + apikeypair
 				}
-				playbackInfoResponse.MediaSources[index].DirectStreamURL = &directStreamURL
 				container := strings.TrimPrefix(path.Ext(*mediasource.Path), ".")
-				playbackInfoResponse.MediaSources[index].Container = &container
+				jsonChain.Set(
+					bsePath+"DirectStreamUrl",
+					directStreamURL,
+				).Set(
+					bsePath+"Container",
+					container,
+				)
 				logging.Infof("%s 强制禁止转码，直链播放链接为：%s，容器为： %s", *mediasource.Name, directStreamURL, container)
 			} else {
 				logging.Infof("%s 保持原有转码设置", *mediasource.Name)
@@ -192,14 +224,18 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 					logging.Warning("请求 FsGet 失败：", err)
 					continue
 				}
-				playbackInfoResponse.MediaSources[index].Size = &fsGetData.Size
+				jsonChain.Set(
+					bsePath+"Size",
+					fsGetData.Size,
+				)
 				logging.Infof("%s 设置文件大小为：%d", *mediasource.Name, fsGetData.Size)
 			}
 		}
 	}
 
-	if data, err = json.Marshal(playbackInfoResponse); err != nil {
-		logging.Warning("序列化 jellyfin.PlaybackInfoResponse Json 错误：", err)
+	data, err = jsonChain.Result()
+	if err != nil {
+		logging.Warning("操作 jellyfin.PlaybackInfoResponse Json 错误：", err)
 		return err
 	}
 

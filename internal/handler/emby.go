@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/sjson"
 )
 
 // // 带引用计数的互斥锁
@@ -143,6 +144,8 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		return err
 	}
 
+	jsonChain := utils.NewFromBytesWithCopy(body, &sjson.Options{Optimistic: true, ReplaceInPlace: true})
+
 	var playbackInfoResponse emby.PlaybackInfoResponse
 	if err = json.Unmarshal(body, &playbackInfoResponse); err != nil {
 		logging.Warning("解析 emby.PlaybackInfoResponse Json 错误：", err)
@@ -156,17 +159,30 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 			logging.Warning("请求 ItemsServiceQueryItem 失败：", err)
 			continue
 		}
+
+		bsePath := "MediaSources." + strconv.Itoa(index) + "."
 		item := itemResponse.Items[0]
 		strmFileType, opt := recgonizeStrmFileType(*item.Path)
 		switch strmFileType {
 		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且禁止转码
 			if !config.HTTPStrm.TransCode {
-				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
-				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = false
-				*playbackInfoResponse.MediaSources[index].SupportsTranscoding = false
-				playbackInfoResponse.MediaSources[index].TranscodingURL = nil
-				playbackInfoResponse.MediaSources[index].TranscodingSubProtocol = nil
-				playbackInfoResponse.MediaSources[index].TranscodingContainer = nil
+				jsonChain.Set(
+					bsePath+"SupportsDirectPlay",
+					true,
+				).Set(
+					bsePath+"SupportsDirectStream",
+					false,
+				).Set(
+					bsePath+"SupportsTranscoding",
+					false,
+				).Delete(
+					bsePath + "TranscodingUrl",
+				).Delete(
+					bsePath + "TranscodingSubProtocol",
+				).Delete(
+					bsePath + "TranscodingContainer",
+				)
+
 				if mediasource.DirectStreamURL != nil {
 					apikeypair, err := utils.ResolveEmbyAPIKVPairs(mediasource.DirectStreamURL)
 					if err != nil {
@@ -174,28 +190,46 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 						continue
 					}
 					directStreamURL := fmt.Sprintf("/videos/%s/stream?MediaSourceId=%s&Static=true&%s", *mediasource.ItemID, *mediasource.ID, apikeypair)
-					playbackInfoResponse.MediaSources[index].DirectStreamURL = &directStreamURL
+					jsonChain.Set(
+						bsePath+"DirectStreamUrl",
+						directStreamURL,
+					)
 					logging.Infof("%s 强制禁止转码，直链播放链接为：%s", *mediasource.Name, directStreamURL)
 				}
 			}
 
 		case constants.AlistStrm: // AlistStm 设置支持直链播放并且禁止转码
 			if !config.AlistStrm.TransCode {
-				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
-				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = false
-				*playbackInfoResponse.MediaSources[index].SupportsTranscoding = false
-				playbackInfoResponse.MediaSources[index].TranscodingURL = nil
-				playbackInfoResponse.MediaSources[index].TranscodingSubProtocol = nil
-				playbackInfoResponse.MediaSources[index].TranscodingContainer = nil
+				jsonChain.Set(
+					bsePath+"SupportsDirectPlay",
+					true,
+				).Set(
+					bsePath+"SupportsDirectStream",
+					false,
+				).Set(
+					bsePath+"SupportsTranscoding",
+					false,
+				).Delete(
+					bsePath + "TranscodingUrl",
+				).Delete(
+					bsePath + "TranscodingSubProtocol",
+				).Delete(
+					bsePath + "TranscodingContainer",
+				)
 				apikeypair, err := utils.ResolveEmbyAPIKVPairs(mediasource.DirectStreamURL)
 				if err != nil {
 					logging.Warning("解析API键值对失败：", err)
 					continue
 				}
 				directStreamURL := fmt.Sprintf("/videos/%s/stream?MediaSourceId=%s&Static=true&%s", *mediasource.ItemID, *mediasource.ID, apikeypair)
-				playbackInfoResponse.MediaSources[index].DirectStreamURL = &directStreamURL
 				container := strings.TrimPrefix(path.Ext(*mediasource.Path), ".")
-				playbackInfoResponse.MediaSources[index].Container = &container
+				jsonChain.Set(
+					bsePath+"DirectStreamUrl",
+					directStreamURL,
+				).Set(
+					bsePath+"Container",
+					container,
+				)
 				logging.Infof("%s 强制禁止转码，直链播放链接为：%s，容器为：%s", *mediasource.Name, directStreamURL, container)
 			} else {
 				logging.Infof("%s 保持原有转码设置", *mediasource.Name)
@@ -212,15 +246,18 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 					logging.Warning("请求 FsGet 失败：", err)
 					continue
 				}
-				playbackInfoResponse.MediaSources[index].Size = &fsGetData.Size
+				jsonChain.Set(
+					bsePath+"Size",
+					fsGetData.Size,
+				)
 				logging.Infof("%s 设置文件大小为：%d", *mediasource.Name, fsGetData.Size)
 			}
 		}
 	}
 
-	body, err = json.Marshal(playbackInfoResponse)
+	body, err = jsonChain.Result()
 	if err != nil {
-		logging.Warning("序列化 emby.PlaybackInfoResponse Json 错误：", err)
+		logging.Warning("操作 emby.PlaybackInfoResponse Json 错误：", err)
 		return err
 	}
 
