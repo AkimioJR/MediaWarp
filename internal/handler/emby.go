@@ -159,7 +159,7 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		item := itemResponse.Items[0]
 		strmFileType, opt := recgonizeStrmFileType(*item.Path)
 		switch strmFileType {
-		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且支持转码
+		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且禁止转码
 			if !config.HTTPStrm.TransCode {
 				*playbackInfoResponse.MediaSources[index].SupportsDirectPlay = true
 				*playbackInfoResponse.MediaSources[index].SupportsDirectStream = true
