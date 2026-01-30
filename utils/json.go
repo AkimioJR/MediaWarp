@@ -26,13 +26,13 @@ func NewFromBytes(data []byte, opt *sjson.Options) *Json {
 	}
 }
 
-func NewFromReader(reader io.Reader, opt *sjson.Options) *Json {
+func NewFromReader(reader io.Reader, opt *sjson.Options) (*Json, error) {
 	data, err := io.ReadAll(reader)
-	return &Json{
-		data: data,
-		err:  err,
-		opt:  opt,
+	if err != nil {
+		return nil, err
 	}
+
+	return &Json{data: data, opt: opt}, nil
 }
 
 func (json *Json) Set(path string, value any) *Json {
