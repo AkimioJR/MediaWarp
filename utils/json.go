@@ -26,6 +26,15 @@ func NewFromBytes(data []byte, opt *sjson.Options) *Json {
 	}
 }
 
+func NewFromBytesWithCopy(data []byte, opt *sjson.Options) *Json {
+	json := Json{
+		data: make([]byte, len(data)),
+		opt:  opt,
+	}
+	copy(json.data, data)
+	return &json
+}
+
 func NewFromReader(reader io.Reader, opt *sjson.Options) (*Json, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
