@@ -4,8 +4,6 @@ import (
 	"MediaWarp/constants"
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
-	"MediaWarp/internal/service"
-	"MediaWarp/internal/service/alist"
 	"MediaWarp/internal/service/emby"
 	"MediaWarp/utils"
 	"bytes"
@@ -165,93 +163,23 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		strmFileType, opt := recgonizeStrmFileType(*item.Path)
 		switch strmFileType {
 		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且禁止转码
-			if !config.HTTPStrm.TransCode {
-				jsonChain.Set(
-					bsePath+"SupportsDirectPlay",
-					true,
-				).Set(
-					bsePath+"SupportsDirectStream",
-					false,
-				).Set(
-					bsePath+"SupportsTranscoding",
-					false,
-				).Delete(
-					bsePath + "TranscodingUrl",
-				).Delete(
-					bsePath + "TranscodingSubProtocol",
-				).Delete(
-					bsePath + "TranscodingContainer",
-				)
-
-				if mediasource.DirectStreamURL != nil {
-					apikeypair, err := utils.ResolveEmbyAPIKVPairs(mediasource.DirectStreamURL)
-					if err != nil {
-						logging.Warning("解析API键值对失败：", err)
-						continue
-					}
-					directStreamURL := fmt.Sprintf("/videos/%s/stream?MediaSourceId=%s&Static=true&%s", *mediasource.ItemID, *mediasource.ID, apikeypair)
-					jsonChain.Set(
-						bsePath+"DirectStreamUrl",
-						directStreamURL,
-					)
-					logging.Infof("%s 强制禁止转码，直链播放链接为：%s", *mediasource.Name, directStreamURL)
-				}
-			}
+			processHTTPStrmPlaybackInfo(
+				jsonChain,
+				bsePath,
+				*mediasource.ItemID,
+				mediasource.DirectStreamURL,
+			)
 
 		case constants.AlistStrm: // AlistStm 设置支持直链播放并且禁止转码
-			if !config.AlistStrm.TransCode {
-				jsonChain.Set(
-					bsePath+"SupportsDirectPlay",
-					true,
-				).Set(
-					bsePath+"SupportsDirectStream",
-					false,
-				).Set(
-					bsePath+"SupportsTranscoding",
-					false,
-				).Delete(
-					bsePath + "TranscodingUrl",
-				).Delete(
-					bsePath + "TranscodingSubProtocol",
-				).Delete(
-					bsePath + "TranscodingContainer",
-				)
-				apikeypair, err := utils.ResolveEmbyAPIKVPairs(mediasource.DirectStreamURL)
-				if err != nil {
-					logging.Warning("解析API键值对失败：", err)
-					continue
-				}
-				directStreamURL := fmt.Sprintf("/videos/%s/stream?MediaSourceId=%s&Static=true&%s", *mediasource.ItemID, *mediasource.ID, apikeypair)
-				container := strings.TrimPrefix(path.Ext(*mediasource.Path), ".")
-				jsonChain.Set(
-					bsePath+"DirectStreamUrl",
-					directStreamURL,
-				).Set(
-					bsePath+"Container",
-					container,
-				)
-				logging.Infof("%s 强制禁止转码，直链播放链接为：%s，容器为：%s", *mediasource.Name, directStreamURL, container)
-			} else {
-				logging.Infof("%s 保持原有转码设置", *mediasource.Name)
-			}
-
-			if playbackInfoResponse.MediaSources[index].Size == nil {
-				alistClient, err := service.GetAlistClient(opt.(string))
-				if err != nil {
-					logging.Warning("获取 AlistClient 失败：", err)
-					continue
-				}
-				fsGetData, err := alistClient.FsGet(&alist.FsGetRequest{Path: *mediasource.Path, Page: 1})
-				if err != nil {
-					logging.Warning("请求 FsGet 失败：", err)
-					continue
-				}
-				jsonChain.Set(
-					bsePath+"Size",
-					fsGetData.Size,
-				)
-				logging.Infof("%s 设置文件大小为：%d", *mediasource.Name, fsGetData.Size)
-			}
+			processAlistStrmPlaybackInfo(
+				jsonChain,
+				bsePath,
+				*mediasource.ID,
+				opt.(string),
+				mediasource.DirectStreamURL,
+				*item.Path,
+				mediasource.Size,
+			)
 		}
 	}
 
