@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/sjson"
@@ -101,15 +102,10 @@ func (*JellyfinHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 // /Items/:itemId
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
 func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
-	// // 检查 IsPlayback 参数，如果为 false 则不做修改直接返回
-	// // 从响应的请求中获取参数，因为响应对象包含原始请求
-	// // 使用不区分大小写的方式获取查询参数
-	// isPlayback := getQueryValueCaseInsensitive(rw.Request.URL.Query(), "IsPlayback")
-	// logging.Debugf("IsPlayback 参数值: '%s' (请求 URL: %s)", isPlayback, rw.Request.URL.String())
-	// if strings.ToLower(isPlayback) == "false" {
-	// 	logging.Debug("IsPlayback=false，跳过 PlaybackInfo 修改")
-	// 	return nil
-	// }
+	startTime := time.Now()
+	defer func() {
+		logging.Debugf("处理 ModifyPlaybackInfo 耗时：%s", time.Since(startTime))
+	}()
 
 	defer rw.Body.Close()
 	data, err := io.ReadAll(rw.Body)
@@ -127,6 +123,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 	}
 
 	for index, mediasource := range playbackInfoResponse.MediaSources {
+		startTime := time.Now()
 		logging.Debug("请求 ItemsServiceQueryItem：" + *mediasource.ID)
 		itemResponse, err := jellyfinHandler.server.ItemsServiceQueryItem(*mediasource.ID, 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
 		if err != nil {
@@ -156,6 +153,8 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 				mediasource.Size,
 			)
 		}
+
+		logging.Debugf("处理 %s 的 MediaSource %s 耗时：%s", *item.Path, *mediasource.ID, time.Since(startTime))
 	}
 
 	data, err = jsonChain.Result()
