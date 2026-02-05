@@ -1,6 +1,7 @@
 package constants
 
 import (
+	"errors"
 	"fmt"
 
 	"gopkg.in/yaml.v3"
@@ -8,37 +9,64 @@ import (
 
 type MediaServerType uint8 // 媒体服务器类型
 
+var InvalidMediaServerErr = errors.New("invalid  MediaServerType")
+
 const (
 	EMBY     MediaServerType = iota // 媒体服务器类型：EmbyServer
 	JELLYFIN                        // 媒体服务器类型：Jellyfin
 	PLEX                            // 媒体服务器类型：Plex
+	FNTV                            // 媒体服务器类型：飞牛影视
 )
 
-func (m *MediaServerType) UnMarshalJSON(data []byte) error {
-	switch string(data) {
-	case `"Emby"`:
-		*m = EMBY
-	case `"Jellyfin"`:
-		*m = JELLYFIN
-	case `"Plex"`:
-		*m = PLEX
+func (m MediaServerType) str() (string, error) {
+	switch m {
+	case EMBY:
+		return "Emby", nil
+	case JELLYFIN:
+		return "Jellyfin", nil
+	case PLEX:
+		return "Plex", nil
+	case FNTV:
+		return "Fntv", nil
 	default:
-		return fmt.Errorf("invalid MediaServerType: %s", string(data))
+		return "", InvalidMediaServerErr
 	}
-	return nil
 }
 
 func (m MediaServerType) String() string {
-	switch m {
-	case EMBY:
-		return "Emby"
-	case JELLYFIN:
-		return "Jellyfin"
-	case PLEX:
-		return "Plex"
-	default:
+	s, err := m.str()
+	if err != nil {
 		return "Unknown"
 	}
+	return s
+}
+
+func parseMediaServerTypeStr(s string) (MediaServerType, error) {
+	switch s {
+	case "Emby":
+		return EMBY, nil
+	case "Jellyfin":
+		return JELLYFIN, nil
+	case "Plex":
+		return PLEX, nil
+	case "Fntv":
+		return FNTV, nil
+	default:
+		return 0, InvalidMediaServerErr
+	}
+}
+
+func (m *MediaServerType) UnMarshalJSON(data []byte) error {
+	var s string
+	if err := yaml.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	mt, err := parseMediaServerTypeStr(s)
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, s)
+	}
+	*m = mt
+	return nil
 }
 
 func (m *MediaServerType) UnmarshalYAML(value *yaml.Node) error {
@@ -46,15 +74,10 @@ func (m *MediaServerType) UnmarshalYAML(value *yaml.Node) error {
 	if err := value.Decode(&s); err != nil {
 		return err
 	}
-	switch s {
-	case "Emby":
-		*m = EMBY
-	case "Jellyfin":
-		*m = JELLYFIN
-	case "Plex":
-		*m = PLEX
-	default:
-		return fmt.Errorf("invalid MediaServerType: %s", s)
+	mt, err := parseMediaServerTypeStr(s)
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, s)
 	}
+	*m = mt
 	return nil
 }
