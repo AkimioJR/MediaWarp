@@ -13,7 +13,7 @@
 
 # MediaWarp
 
-MediaWarp 是**前置于 EmbyServer/Jellyfin 的反向代理服务器**，修改了原媒体服务器返回响应以实现特殊功能  
+MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务器**，修改了原媒体服务器返回响应以实现特殊功能  
 
 [![license][license-badge]][license]
 [![prs][prs-badge]][prs]
