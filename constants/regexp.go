@@ -73,3 +73,17 @@ var JellyfinRegexp = &JellyfinRegexps{
 		Subtitle: regexp.MustCompile(`(?i)/Videos/(.*)/Subtitles/(.*)/Stream\.(ass|ssa|srt|)?$`),
 	},
 }
+
+// 飞牛影视媒体服务器正则表达式
+type FNTVRouterRegexps struct {
+	StreamHandler *regexp.Regexp
+	Cache         CacheRegexps
+}
+
+var FNTVRegexp = &FNTVRouterRegexps{
+	StreamHandler: regexp.MustCompile(`(?i)^/v/api/v1/stream$`),
+	Cache: CacheRegexps{
+		Image:    regexp.MustCompile(`(?i)^/v/api/v1/sys/img/[\d\w]{2}/[\d\w]{2}/[\d\w]+\.[\d\w]+$`),
+		Subtitle: nil,
+	},
+}
