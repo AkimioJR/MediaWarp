@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/allegro/bigcache/v3"
 )
@@ -63,6 +64,11 @@ func getHTTPStrmHandler() (StrmHandlerFunc, error) {
 }
 
 func alistStrmHandler(content string, alistAddr string) string {
+	startTime := time.Now()
+	defer func() {
+		logging.Debugf("获取 AlistStrm 重定向 URL 耗时：%s", time.Since(startTime))
+	}()
+
 	alistClient, err := service.GetAlistClient(alistAddr)
 	if err != nil {
 		logging.Warning("获取 AlistClient 失败：", err)
