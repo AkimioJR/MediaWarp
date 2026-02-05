@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/sjson"
 )
 
 // 响应修改创建器
@@ -149,4 +150,9 @@ func getFinalURL(client *http.Client, rawURL string, ua string) (string, error) 
 	}
 
 	return "", ErrMaxRedirectsExceeded
+}
+
+var jsonChainOption = &sjson.Options{
+	Optimistic:     true,
+	ReplaceInPlace: true,
 }

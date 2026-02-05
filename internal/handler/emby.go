@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tidwall/sjson"
 )
 
 // // 带引用计数的互斥锁
@@ -138,7 +137,7 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		return err
 	}
 
-	jsonChain := utils.NewFromBytesWithCopy(body, &sjson.Options{Optimistic: true, ReplaceInPlace: true})
+	jsonChain := utils.NewFromBytesWithCopy(body, jsonChainOption)
 
 	var playbackInfoResponse emby.PlaybackInfoResponse
 	if err = json.Unmarshal(body, &playbackInfoResponse); err != nil {

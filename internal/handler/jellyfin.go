@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tidwall/sjson"
 )
 
 // Jellyfin 服务器处理器
@@ -114,7 +113,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 		return err
 	}
 
-	jsonChain := utils.NewFromBytesWithCopy(data, &sjson.Options{Optimistic: true, ReplaceInPlace: true})
+	jsonChain := utils.NewFromBytesWithCopy(data, jsonChainOption)
 
 	var playbackInfoResponse jellyfin.PlaybackInfoResponse
 	if err = json.Unmarshal(data, &playbackInfoResponse); err != nil {
