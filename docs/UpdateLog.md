@@ -115,3 +115,6 @@
   - 移除 PlaybackInfo 控制流相关代码
   - 禁用流式播放提高兼容性
   - 重构 PlaybackInfo 响应修改控制流程，提高兼容性
+- 2026.2.6: v0.2.0
+  - 重构 ModifyPlaybackInfo 相关方法
+  - 添加飞牛影视支持
