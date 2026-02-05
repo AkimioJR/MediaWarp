@@ -75,16 +75,11 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 		logging.Debugf("FNTV ModifyStream 处理耗时: %s", time.Since(startTime).String())
 	}()
 
-	data, err := io.ReadAll(rw.Body)
+	jsonChain, err := utils.NewFromReader(rw.Body, jsonChainOption)
 	if err != nil {
 		logging.Warning("读取响应体失败：", err)
 		return err
 	}
-	defer rw.Body.Close()
-	logging.Debug(string(data))
-
-	jsonChain := utils.NewFromBytesWithCopy(data, jsonChainOption)
-
 	code := jsonChain.Get("code").Int()
 	if code != 0 {
 		logging.Warningf("stream 响应 code: %d, msg: %s", code, jsonChain.Get("msg").String())
@@ -138,7 +133,7 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 		logging.Debugf("%s 未匹配任何 Strm 类型，保持原有播放链接不变", filePath)
 	}
 
-	data, err = jsonChain.Result()
+	data, err := jsonChain.Result()
 	if err != nil {
 		logging.Warning("操作 FNTV Stream Json 错误：", err)
 		return err
