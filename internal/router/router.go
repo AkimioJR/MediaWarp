@@ -53,8 +53,12 @@ func InitRouter() *gin.Engine {
 		mediaServerHandler := handler.GetMediaServer()
 		{
 			if config.Cache.ImageTTL > 0 {
-				logging.Infof("图片缓存中间件已启用, TTL: %s", config.Cache.ImageTTL.String())
-				handlers = append(handlers, middleware.ImageCache(config.Cache.ImageTTL, mediaServerHandler.GetImageCacheRegexp()))
+				if mediaServerHandler.GetImageCacheRegexp() != nil {
+					logging.Infof("图片缓存中间件已启用, TTL: %s", config.Cache.ImageTTL.String())
+					handlers = append(handlers, middleware.ImageCache(config.Cache.ImageTTL, mediaServerHandler.GetImageCacheRegexp()))
+				} else {
+					logging.Warningf("媒体服务器 %s 不支持图片缓存, 未添加图片缓存中间件", config.MediaServer.Type.String())
+				}
 			} else {
 				logging.Infof("图片缓存中间件未启用, TTL: %s", config.Cache.ImageTTL.String())
 			}
@@ -62,8 +66,12 @@ func InitRouter() *gin.Engine {
 
 		{
 			if config.Cache.SubtitleTTL > 0 {
-				logging.Infof("字幕缓存中间件已启用, TTL: %s", config.Cache.SubtitleTTL.String())
-				handlers = append(handlers, middleware.SubtitleCache(config.Cache.SubtitleTTL, mediaServerHandler.GetSubtitleCacheRegexp()))
+				if mediaServerHandler.GetSubtitleCacheRegexp() != nil {
+					logging.Infof("字幕缓存中间件已启用, TTL: %s", config.Cache.SubtitleTTL.String())
+					handlers = append(handlers, middleware.SubtitleCache(config.Cache.SubtitleTTL, mediaServerHandler.GetSubtitleCacheRegexp()))
+				} else {
+					logging.Warningf("媒体服务器 %s 不支持字幕缓存, 未添加字幕缓存中间件", config.MediaServer.Type.String())
+				}
 			} else {
 				logging.Infof("字幕缓存中间件未启用, TTL: %s", config.Cache.SubtitleTTL.String())
 			}
