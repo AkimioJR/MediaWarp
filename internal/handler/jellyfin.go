@@ -33,7 +33,7 @@ type JellyfinHandler struct {
 	// playbackInfoMutex sync.Map // 视频流处理并发控制，确保同一个 item ID 的重定向请求串行化，避免重复获取缓存
 }
 
-func NewJellyfinHander(addr string, apiKey string) (*JellyfinHandler, error) {
+func NewJellyfinHandler(addr string, apiKey string) (*JellyfinHandler, error) {
 	jellyfinHandler := JellyfinHandler{}
 	jellyfinHandler.server = jellyfin.New(addr, apiKey)
 	target, err := url.Parse(jellyfinHandler.server.GetEndpoint())
