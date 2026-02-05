@@ -27,7 +27,7 @@ func (m MediaServerType) str() (string, error) {
 	case PLEX:
 		return "Plex", nil
 	case FNTV:
-		return "Fntv", nil
+		return "FNTV", nil
 	default:
 		return "", InvalidMediaServerErr
 	}
@@ -49,7 +49,7 @@ func parseMediaServerTypeStr(s string) (MediaServerType, error) {
 		return JELLYFIN, nil
 	case "Plex":
 		return PLEX, nil
-	case "Fntv":
+	case "FNTV":
 		return FNTV, nil
 	default:
 		return 0, InvalidMediaServerErr
