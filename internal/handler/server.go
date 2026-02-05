@@ -27,6 +27,9 @@ func Init() error {
 		mediaServerHandler, err = NewEmbyServerHandler(config.MediaServer.ADDR, config.MediaServer.AUTH)
 	case constants.JELLYFIN:
 		mediaServerHandler, err = NewJellyfinHandler(config.MediaServer.ADDR, config.MediaServer.AUTH)
+	case constants.FNTV:
+		mediaServerHandler, err = NewFNTVHandler(config.MediaServer.ADDR)
+
 	default:
 		err = ErrInvalidMediaServerType
 	}
