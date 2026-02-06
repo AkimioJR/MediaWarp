@@ -84,9 +84,13 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 
 	jsonChain := utils.NewFromBytesWithCopy(data, jsonChainOption)
 
-	code := jsonChain.Get("code").Int()
-	if code != 0 {
-		logging.Warningf("stream 响应 code: %d, msg: %s", code, jsonChain.Get("msg").String())
+	codeRes := jsonChain.Get("code")
+	if codeRes.Type != gjson.Number {
+		logging.Warningf("stream 响应 code 类型错误: %v", codeRes)
+		rw.Body = io.NopCloser(bytes.NewReader(data))
+		return nil
+	} else if code := codeRes.Int(); code != 0 {
+		logging.Debugf("stream 响应 code: %d, msg: %s", code, jsonChain.Get("msg").String())
 		rw.Body = io.NopCloser(bytes.NewReader(data))
 		return nil
 	}
