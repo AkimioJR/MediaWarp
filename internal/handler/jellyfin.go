@@ -113,7 +113,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 		return err
 	}
 
-	jsonChain := utils.NewFromBytesWithCopy(data, jsonChainOption)
+	jsonChain := utils.NewJsonChainFromBytesWithCopy(data, jsonChainOption)
 
 	var playbackInfoResponse jellyfin.PlaybackInfoResponse
 	if err = json.Unmarshal(data, &playbackInfoResponse); err != nil {

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func processHTTPStrmPlaybackInfo(jsonChain *utils.Json, bsePath string, id string, directStreamURL *string) {
+func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id string, directStreamURL *string) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 HTTPStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))
@@ -55,7 +55,7 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.Json, bsePath string, id strin
 	}
 }
 
-func processAlistStrmPlaybackInfo(jsonChain *utils.Json, bsePath string, id string, alistAddr string, directStreamURL *string, filepath string, size *int64) {
+func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id string, alistAddr string, directStreamURL *string, filepath string, size *int64) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 AlistStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))

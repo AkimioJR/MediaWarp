@@ -7,28 +7,28 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-type Json struct {
+type JsonChain struct {
 	data []byte
 	err  error
 	opt  *sjson.Options
 }
 
-func NewFromString(str string, opt *sjson.Options) *Json {
-	return &Json{
+func NewFromString(str string, opt *sjson.Options) *JsonChain {
+	return &JsonChain{
 		data: []byte(str),
 		opt:  opt,
 	}
 }
 
-func NewFromBytes(data []byte, opt *sjson.Options) *Json {
-	return &Json{
+func NewJsonChainFromBytes(data []byte, opt *sjson.Options) *JsonChain {
+	return &JsonChain{
 		data: data,
 		opt:  opt,
 	}
 }
 
-func NewFromBytesWithCopy(data []byte, opt *sjson.Options) *Json {
-	json := Json{
+func NewJsonChainFromBytesWithCopy(data []byte, opt *sjson.Options) *JsonChain {
+	json := JsonChain{
 		data: make([]byte, len(data)),
 		opt:  opt,
 	}
@@ -36,16 +36,16 @@ func NewFromBytesWithCopy(data []byte, opt *sjson.Options) *Json {
 	return &json
 }
 
-func NewFromReader(reader io.Reader, opt *sjson.Options) (*Json, error) {
+func NewJsonChainFromReader(reader io.Reader, opt *sjson.Options) (*JsonChain, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Json{data: data, opt: opt}, nil
+	return &JsonChain{data: data, opt: opt}, nil
 }
 
-func (json *Json) Set(path string, value any) *Json {
+func (json *JsonChain) Set(path string, value any) *JsonChain {
 	if json.err != nil {
 		return json
 	}
@@ -54,7 +54,7 @@ func (json *Json) Set(path string, value any) *Json {
 	return json
 }
 
-func (json *Json) Delete(path string) *Json {
+func (json *JsonChain) Delete(path string) *JsonChain {
 	if json.err != nil {
 		return json
 	}
@@ -63,19 +63,19 @@ func (json *Json) Delete(path string) *Json {
 	return json
 }
 
-func (json *Json) Get(path string) gjson.Result {
+func (json *JsonChain) Get(path string) gjson.Result {
 	return gjson.GetBytes(json.data, path)
 }
 
-func (json *Json) Result() ([]byte, error) {
+func (json *JsonChain) Result() ([]byte, error) {
 	return json.data, json.err
 }
 
-func (json *Json) ResultString() (string, error) {
+func (json *JsonChain) ResultString() (string, error) {
 	return string(json.data), json.err
 }
 
-func (json *Json) ResultToWriter(writer io.Writer) error {
+func (json *JsonChain) ResultToWriter(writer io.Writer) error {
 	if json.err != nil {
 		return json.err
 	}

@@ -82,7 +82,7 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 	}
 	defer rw.Body.Close()
 
-	jsonChain := utils.NewFromBytesWithCopy(data, jsonChainOption)
+	jsonChain := utils.NewJsonChainFromBytesWithCopy(data, jsonChainOption)
 
 	codeRes := jsonChain.Get("code")
 	if codeRes.Type != gjson.Number {

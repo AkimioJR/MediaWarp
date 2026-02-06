@@ -137,7 +137,7 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		return err
 	}
 
-	jsonChain := utils.NewFromBytesWithCopy(body, jsonChainOption)
+	jsonChain := utils.NewJsonChainFromBytesWithCopy(body, jsonChainOption)
 
 	var playbackInfoResponse emby.PlaybackInfoResponse
 	if err = json.Unmarshal(body, &playbackInfoResponse); err != nil {
