@@ -75,20 +75,26 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 		logging.Debugf("FNTV ModifyStream 处理耗时: %s", time.Since(startTime).String())
 	}()
 
-	jsonChain, err := utils.NewFromReader(rw.Body, jsonChainOption)
+	data, err := io.ReadAll(rw.Body)
 	if err != nil {
 		logging.Warning("读取响应体失败：", err)
 		return err
 	}
+	defer rw.Body.Close()
+
+	jsonChain := utils.NewFromBytesWithCopy(data, jsonChainOption)
+
 	code := jsonChain.Get("code").Int()
 	if code != 0 {
 		logging.Warningf("stream 响应 code: %d, msg: %s", code, jsonChain.Get("msg").String())
+		rw.Body = io.NopCloser(bytes.NewReader(data))
 		return nil
 	}
 
 	filePathRes := jsonChain.Get("data.file_stream.path")
 	if filePathRes.Type != gjson.String {
 		logging.Warningf("stream 响应 data.file_stream.path 字段不正确: %#v", filePathRes)
+		rw.Body = io.NopCloser(bytes.NewReader(data))
 		return nil
 	}
 
@@ -101,6 +107,7 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 		urlRes := jsonChain.Get("data.direct_link_qualities.0.url")
 		if urlRes.Type != gjson.String {
 			logging.Warningf("stream 响应 data.direct_link_qualities.0.url 字段不正确: %#v", urlRes)
+			rw.Body = io.NopCloser(bytes.NewReader(data))
 			return nil
 		}
 
@@ -117,6 +124,7 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 		remoteFilepathRes := jsonChain.Get("data.direct_link_qualities.0.url")
 		if remoteFilepathRes.Type != gjson.String {
 			logging.Warningf("stream 响应 data.direct_link_qualities.0.url 字段不正确: %#v", remoteFilepathRes)
+			rw.Body = io.NopCloser(bytes.NewReader(data))
 			return nil
 		}
 
@@ -133,9 +141,9 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 		logging.Debugf("%s 未匹配任何 Strm 类型，保持原有播放链接不变", filePath)
 	}
 
-	data, err := jsonChain.Result()
+	data, err = jsonChain.Result()
 	if err != nil {
-		logging.Warning("操作 FNTV Stream Json 错误：", err)
+		logging.Warningf("操作 FNTV Stream Json 错误: %v", err)
 		return err
 	}
 	rw.Header.Set("Content-Type", "application/json") // 更新 Content-Type 头
