@@ -84,6 +84,6 @@ var FNTVRegexp = &FNTVRouterRegexps{
 	StreamHandler: regexp.MustCompile(`(?i)^/v/api/v1/stream$`),
 	Cache: CacheRegexps{
 		Image:    regexp.MustCompile(`(?i)^/v/api/v1/sys/img/[\d\w]{2}/[\d\w]{2}/[\d\w]+\.[\d\w]+$`),
-		Subtitle: nil,
+		Subtitle: regexp.MustCompile(`(?i)^/v/api/v1/subtitle/dl/[\d\w]+$`),
 	},
 }
