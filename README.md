@@ -8,6 +8,9 @@
 [release-badge]: https://img.shields.io/github/v/release/AkimioJR/MediaWarp?style=flat-square
 [docker]: https://hub.docker.com/r/akimio/mediawarp
 [docker-badge]: https://img.shields.io/docker/pulls/akimio/mediawarp?color=%2348BB78&logo=docker&label=pulls
+[telegram]: https://t.me/AkimioJR_MediaWarp
+[telegram-badge]: https://img.shields.io/badge/Telegram-blue?logo=Telegram
+
 
 <div align="center">
 
@@ -20,7 +23,7 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
 [![issues][issues-badge]][issues]
 [![release][release-badge]][release]
 [![docker][docker-badge]][docker]
-
+[![telegram][telegram-badge]][telegram]
 
 
 [功能](#功能) •
