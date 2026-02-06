@@ -9,32 +9,32 @@ import (
 	"strconv"
 )
 
-type EmbyServer struct {
+type Client struct {
 	endpoint string
 	apiKey   string // 认证方式：APIKey；获取方式：Emby控制台 -> 高级 -> API密钥
 }
 
 // 获取媒体服务器类型
-func (embyServer *EmbyServer) GetType() constants.MediaServerType {
+func (client *Client) GetType() constants.MediaServerType {
 	return constants.EMBY
 }
 
-// 获取EmbyServer连接地址
+// 获取Emby连接地址
 //
 // 包含协议、服务器域名（IP）、端口号
 // 示例：return "http://emby.example.com:8096"
-func (embyServer *EmbyServer) GetEndpoint() string {
-	return embyServer.endpoint
+func (client *Client) GetEndpoint() string {
+	return client.endpoint
 }
 
-// 获取EmbyServer的API Key
-func (embyServer *EmbyServer) GetAPIKey() string {
-	return embyServer.apiKey
+// 获取Emby的API Key
+func (client *Client) GetAPIKey() string {
+	return client.apiKey
 }
 
 // ItemsService
 // /Items
-func (embyServer *EmbyServer) ItemsServiceQueryItem(ids string, limit int, fields string) (*EmbyResponse, error) {
+func (client *Client) ItemsServiceQueryItem(ids string, limit int, fields string) (*EmbyResponse, error) {
 	var (
 		params       = url.Values{}
 		itemResponse = &EmbyResponse{}
@@ -43,8 +43,8 @@ func (embyServer *EmbyServer) ItemsServiceQueryItem(ids string, limit int, field
 	params.Add("Limit", strconv.Itoa(limit))
 	params.Add("Fields", fields)
 	params.Add("Recursive", "true")
-	params.Add("api_key", embyServer.GetAPIKey())
-	api := embyServer.GetEndpoint() + "/Items?" + params.Encode()
+	params.Add("api_key", client.GetAPIKey())
+	api := client.GetEndpoint() + "/Items?" + params.Encode()
 	resp, err := utils.GetHTTPClient().Get(api)
 	if err != nil {
 		return nil, err
@@ -64,8 +64,8 @@ func (embyServer *EmbyServer) ItemsServiceQueryItem(ids string, limit int, field
 }
 
 // 获取index.html内容 API：/web/index.html
-func (embyServer *EmbyServer) GetIndexHtml() ([]byte, error) {
-	resp, err := utils.GetHTTPClient().Get(embyServer.GetEndpoint() + "/web/index.html")
+func (client *Client) GetIndexHtml() ([]byte, error) {
+	resp, err := utils.GetHTTPClient().Get(client.GetEndpoint() + "/web/index.html")
 	if err != nil {
 		return nil, err
 	}
@@ -78,11 +78,11 @@ func (embyServer *EmbyServer) GetIndexHtml() ([]byte, error) {
 	return htmlContent, nil
 }
 
-// 获取EmbyServer实例
-func New(addr string, apiKey string) *EmbyServer {
-	emby := &EmbyServer{
+// 获取Emby实例
+func New(addr string, apiKey string) *Client {
+	client := &Client{
 		endpoint: utils.GetEndpoint(addr),
 		apiKey:   apiKey,
 	}
-	return emby
+	return client
 }

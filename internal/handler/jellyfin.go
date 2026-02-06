@@ -25,7 +25,7 @@ import (
 
 // Jellyfin 服务器处理器
 type JellyfinHandler struct {
-	server          *jellyfin.Jellyfin     // Jellyfin 服务器
+	client          *jellyfin.Client       // Jellyfin 客户端
 	routerRules     []RegexpRouteRule      // 正则路由规则
 	proxy           *httputil.ReverseProxy // 反向代理
 	httpStrmHandler StrmHandlerFunc
@@ -33,37 +33,37 @@ type JellyfinHandler struct {
 }
 
 func NewJellyfinHandler(addr string, apiKey string) (*JellyfinHandler, error) {
-	jellyfinHandler := JellyfinHandler{}
-	jellyfinHandler.server = jellyfin.New(addr, apiKey)
-	target, err := url.Parse(jellyfinHandler.server.GetEndpoint())
+	handler := JellyfinHandler{}
+	handler.client = jellyfin.New(addr, apiKey)
+	target, err := url.Parse(handler.client.GetEndpoint())
 	if err != nil {
 		return nil, err
 	}
-	jellyfinHandler.proxy = httputil.NewSingleHostReverseProxy(target)
+	handler.proxy = httputil.NewSingleHostReverseProxy(target)
 
 	{ // 初始化路由规则
-		jellyfinHandler.routerRules = []RegexpRouteRule{
+		handler.routerRules = []RegexpRouteRule{
 			{
 				Regexp: constants.JellyfinRegexp.Router.ModifyPlaybackInfo,
 				Handler: responseModifyCreater(
-					&httputil.ReverseProxy{Director: jellyfinHandler.proxy.Director},
-					jellyfinHandler.ModifyPlaybackInfo,
+					&httputil.ReverseProxy{Director: handler.proxy.Director},
+					handler.ModifyPlaybackInfo,
 				),
 			},
 			{
 				Regexp:  constants.JellyfinRegexp.Router.VideosHandler,
-				Handler: jellyfinHandler.VideosHandler,
+				Handler: handler.VideosHandler,
 			},
 		}
 		if config.Web.Enable {
 			if config.Web.Index || config.Web.Head != "" || config.Web.ExternalPlayerUrl || config.Web.VideoTogether {
-				jellyfinHandler.routerRules = append(
-					jellyfinHandler.routerRules,
+				handler.routerRules = append(
+					handler.routerRules,
 					RegexpRouteRule{
 						Regexp: constants.JellyfinRegexp.Router.ModifyIndex,
 						Handler: responseModifyCreater(
-							&httputil.ReverseProxy{Director: jellyfinHandler.proxy.Director},
-							jellyfinHandler.ModifyIndex,
+							&httputil.ReverseProxy{Director: handler.proxy.Director},
+							handler.ModifyIndex,
 						),
 					},
 				)
@@ -71,24 +71,24 @@ func NewJellyfinHandler(addr string, apiKey string) (*JellyfinHandler, error) {
 		}
 	}
 
-	jellyfinHandler.httpStrmHandler, err = getHTTPStrmHandler()
+	handler.httpStrmHandler, err = getHTTPStrmHandler()
 	if err != nil {
 		return nil, fmt.Errorf("创建 HTTPStrm 处理器失败: %w", err)
 	}
-	return &jellyfinHandler, nil
+	return &handler, nil
 }
 
 // 转发请求至上游服务器
-func (jellyfinHandler *JellyfinHandler) ReverseProxy(rw http.ResponseWriter, req *http.Request) {
-	jellyfinHandler.proxy.ServeHTTP(rw, req)
+func (handler *JellyfinHandler) ReverseProxy(rw http.ResponseWriter, req *http.Request) {
+	handler.proxy.ServeHTTP(rw, req)
 }
 
 // 正则路由表
-func (jellyfinHandler *JellyfinHandler) GetRegexpRouteRules() []RegexpRouteRule {
-	return jellyfinHandler.routerRules
+func (handler *JellyfinHandler) GetRegexpRouteRules() []RegexpRouteRule {
+	return handler.routerRules
 }
 
-func (jellyfinHandler *JellyfinHandler) GetImageCacheRegexp() *regexp.Regexp {
+func (handler *JellyfinHandler) GetImageCacheRegexp() *regexp.Regexp {
 	return constants.JellyfinRegexp.Cache.Image
 }
 
@@ -100,7 +100,7 @@ func (*JellyfinHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 //
 // /Items/:itemId
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
-func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
+func (handler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 ModifyPlaybackInfo 耗时：%s", time.Since(startTime))
@@ -124,7 +124,7 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 	for index, mediasource := range playbackInfoResponse.MediaSources {
 		startTime := time.Now()
 		logging.Debug("请求 ItemsServiceQueryItem：" + *mediasource.ID)
-		itemResponse, err := jellyfinHandler.server.ItemsServiceQueryItem(*mediasource.ID, 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
+		itemResponse, err := handler.client.ItemsServiceQueryItem(*mediasource.ID, 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
 		if err != nil {
 			logging.Warning("请求 ItemsServiceQueryItem 失败：", err)
 			continue
@@ -171,9 +171,9 @@ func (jellyfinHandler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) er
 // 视频流处理器
 //
 // 支持播放本地视频、重定向 HttpStrm、AlistStrm
-func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
+func (handler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 	if ctx.Request.Method == http.MethodHead { // 不额外处理 HEAD 请求
-		jellyfinHandler.ReverseProxy(ctx.Writer, ctx.Request)
+		handler.ReverseProxy(ctx.Writer, ctx.Request)
 		logging.Debug("VideosHandler 不处理 HEAD 请求，转发至上游服务器")
 		return
 	}
@@ -196,7 +196,7 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 	// var muWrapper *mutexWithRefCount
 	// if itemID != "" {
 	// 	// 加载或创建 mutex wrapper
-	// 	value, _ := jellyfinHandler.playbackInfoMutex.LoadOrStore(itemID, &mutexWithRefCount{})
+	// 	value, _ := handler.playbackInfoMutex.LoadOrStore(itemID, &mutexWithRefCount{})
 	// 	muWrapper = value.(*mutexWithRefCount)
 
 	// 	// 增加引用计数
@@ -210,7 +210,7 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 	// 		refCount := atomic.AddInt32(&muWrapper.refCount, -1)
 	// 		// 如果没有其他 goroutine 在使用，删除这个 mutex 以避免内存泄漏
 	// 		if refCount == 0 {
-	// 			jellyfinHandler.playbackInfoMutex.Delete(itemID)
+	// 			handler.playbackInfoMutex.Delete(itemID)
 	// 		}
 	// 	}()
 	// 	logging.Debugf("开始处理 item %s 的 VideosHandler 请求", itemID)
@@ -218,10 +218,10 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 
 	mediaSourceID := ctx.Query("mediasourceid")
 	logging.Debugf("请求 ItemsServiceQueryItem：%s", mediaSourceID)
-	itemResponse, err := jellyfinHandler.server.ItemsServiceQueryItem(mediaSourceID, 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
+	itemResponse, err := handler.client.ItemsServiceQueryItem(mediaSourceID, 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
 	if err != nil {
 		logging.Warning("请求 ItemsServiceQueryItem 失败：", err)
-		jellyfinHandler.proxy.ServeHTTP(ctx.Writer, ctx.Request)
+		handler.proxy.ServeHTTP(ctx.Writer, ctx.Request)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 
 	if !strings.HasSuffix(strings.ToLower(*item.Path), ".strm") { // 不是 Strm 文件
 		logging.Debugf("播放本地视频：%s，不进行处理", *item.Path)
-		jellyfinHandler.proxy.ServeHTTP(ctx.Writer, ctx.Request)
+		handler.proxy.ServeHTTP(ctx.Writer, ctx.Request)
 		return
 	}
 
@@ -240,7 +240,7 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 			case constants.HTTPStrm:
 				if *mediasource.Protocol == jellyfin.HTTP {
 					// httpStrmHandler 内部有缓存机制，锁确保串行化访问
-					ctx.Redirect(http.StatusFound, jellyfinHandler.httpStrmHandler(*mediasource.Path, ctx.Request.UserAgent()))
+					ctx.Redirect(http.StatusFound, handler.httpStrmHandler(*mediasource.Path, ctx.Request.UserAgent()))
 					return
 				}
 
@@ -252,7 +252,7 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 				return
 
 			case constants.UnknownStrm:
-				jellyfinHandler.proxy.ServeHTTP(ctx.Writer, ctx.Request)
+				handler.proxy.ServeHTTP(ctx.Writer, ctx.Request)
 				return
 			}
 		}
@@ -260,7 +260,7 @@ func (jellyfinHandler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 }
 
 // 修改首页函数
-func (jellyfinHandler *JellyfinHandler) ModifyIndex(rw *http.Response) error {
+func (handler *JellyfinHandler) ModifyIndex(rw *http.Response) error {
 	var (
 		htmlFilePath string = path.Join(config.CostomDir(), "index.html")
 		htmlContent  []byte

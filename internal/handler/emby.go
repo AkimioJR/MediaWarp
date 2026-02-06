@@ -30,8 +30,8 @@ import (
 // }
 
 // Emby服务器处理器
-type EmbyServerHandler struct {
-	server          *emby.EmbyServer       // Emby 服务器
+type EmbyHandler struct {
+	client          *emby.Client           // Emby客户端
 	routerRules     []RegexpRouteRule      // 正则路由规则
 	proxy           *httputil.ReverseProxy // 反向代理
 	httpStrmHandler StrmHandlerFunc
@@ -39,84 +39,84 @@ type EmbyServerHandler struct {
 }
 
 // 初始化
-func NewEmbyServerHandler(addr string, apiKey string) (*EmbyServerHandler, error) {
-	var embyServerHandler = EmbyServerHandler{}
-	embyServerHandler.server = emby.New(addr, apiKey)
-	target, err := url.Parse(embyServerHandler.server.GetEndpoint())
+func NewEmbyServerHandler(addr string, apiKey string) (*EmbyHandler, error) {
+	var handler = EmbyHandler{}
+	handler.client = emby.New(addr, apiKey)
+	target, err := url.Parse(handler.client.GetEndpoint())
 	if err != nil {
 		return nil, err
 	}
-	embyServerHandler.proxy = httputil.NewSingleHostReverseProxy(target)
+	handler.proxy = httputil.NewSingleHostReverseProxy(target)
 
 	{ // 初始化路由规则
-		embyServerHandler.routerRules = []RegexpRouteRule{
+		handler.routerRules = []RegexpRouteRule{
 			{
 				Regexp:  constants.EmbyRegexp.Router.VideosHandler,
-				Handler: embyServerHandler.VideosHandler,
+				Handler: handler.VideosHandler,
 			},
 			{
 				Regexp: constants.EmbyRegexp.Router.ModifyPlaybackInfo,
 				Handler: responseModifyCreater(
-					&httputil.ReverseProxy{Director: embyServerHandler.proxy.Director},
-					embyServerHandler.ModifyPlaybackInfo,
+					&httputil.ReverseProxy{Director: handler.proxy.Director},
+					handler.ModifyPlaybackInfo,
 				),
 			},
 			{
 				Regexp: constants.EmbyRegexp.Router.ModifyBaseHtmlPlayer,
 				Handler: responseModifyCreater(
-					&httputil.ReverseProxy{Director: embyServerHandler.proxy.Director},
-					embyServerHandler.ModifyBaseHtmlPlayer,
+					&httputil.ReverseProxy{Director: handler.proxy.Director},
+					handler.ModifyBaseHtmlPlayer,
 				),
 			},
 		}
 
 		if config.Web.Enable {
 			if config.Web.Index || config.Web.Head != "" || config.Web.ExternalPlayerUrl || config.Web.VideoTogether {
-				embyServerHandler.routerRules = append(embyServerHandler.routerRules,
+				handler.routerRules = append(handler.routerRules,
 					RegexpRouteRule{
 						Regexp: constants.EmbyRegexp.Router.ModifyIndex,
 						Handler: responseModifyCreater(
-							&httputil.ReverseProxy{Director: embyServerHandler.proxy.Director},
-							embyServerHandler.ModifyIndex,
+							&httputil.ReverseProxy{Director: handler.proxy.Director},
+							handler.ModifyIndex,
 						),
 					},
 				)
 			}
 		}
 		if config.Subtitle.Enable && config.Subtitle.SRT2ASS {
-			embyServerHandler.routerRules = append(embyServerHandler.routerRules,
+			handler.routerRules = append(handler.routerRules,
 				RegexpRouteRule{
 					Regexp: constants.EmbyRegexp.Router.ModifySubtitles,
 					Handler: responseModifyCreater(
-						&httputil.ReverseProxy{Director: embyServerHandler.proxy.Director},
-						embyServerHandler.ModifySubtitles,
+						&httputil.ReverseProxy{Director: handler.proxy.Director},
+						handler.ModifySubtitles,
 					),
 				},
 			)
 		}
 	}
-	embyServerHandler.httpStrmHandler, err = getHTTPStrmHandler()
+	handler.httpStrmHandler, err = getHTTPStrmHandler()
 	if err != nil {
 		return nil, fmt.Errorf("创建 HTTPStrm 处理器失败: %w", err)
 	}
-	return &embyServerHandler, nil
+	return &handler, nil
 }
 
 // 转发请求至上游服务器
-func (embyServerHandler *EmbyServerHandler) ReverseProxy(rw http.ResponseWriter, req *http.Request) {
-	embyServerHandler.proxy.ServeHTTP(rw, req)
+func (handler *EmbyHandler) ReverseProxy(rw http.ResponseWriter, req *http.Request) {
+	handler.proxy.ServeHTTP(rw, req)
 }
 
 // 正则路由表
-func (embyServerHandler *EmbyServerHandler) GetRegexpRouteRules() []RegexpRouteRule {
-	return embyServerHandler.routerRules
+func (handler *EmbyHandler) GetRegexpRouteRules() []RegexpRouteRule {
+	return handler.routerRules
 }
 
-func (embyServerHandler *EmbyServerHandler) GetImageCacheRegexp() *regexp.Regexp {
+func (handler *EmbyHandler) GetImageCacheRegexp() *regexp.Regexp {
 	return constants.EmbyRegexp.Cache.Image
 }
 
-func (*EmbyServerHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
+func (handler *EmbyHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 	return constants.EmbyRegexp.Cache.Subtitle
 }
 
@@ -124,7 +124,7 @@ func (*EmbyServerHandler) GetSubtitleCacheRegexp() *regexp.Regexp {
 //
 // /Items/:itemId/PlaybackInfo
 // 强制将 HTTPStrm 设置为支持直链播放和转码、AlistStrm 设置为支持直链播放并且禁止转码
-func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response) error {
+func (handler *EmbyHandler) ModifyPlaybackInfo(rw *http.Response) error {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 ModifyPlaybackInfo 耗时：%s", time.Since(startTime))
@@ -149,7 +149,7 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 		startTime := time.Now()
 
 		logging.Debug("请求 ItemsServiceQueryItem：" + *mediasource.ID)
-		itemResponse, err := embyServerHandler.server.ItemsServiceQueryItem(strings.Replace(*mediasource.ID, "mediasource_", "", 1), 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
+		itemResponse, err := handler.client.ItemsServiceQueryItem(strings.Replace(*mediasource.ID, "mediasource_", "", 1), 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
 		if err != nil {
 			logging.Warning("请求 ItemsServiceQueryItem 失败：", err)
 			continue
@@ -197,9 +197,9 @@ func (embyServerHandler *EmbyServerHandler) ModifyPlaybackInfo(rw *http.Response
 // 视频流处理器
 //
 // 支持播放本地视频、重定向 HttpStrm、AlistStrm
-func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
+func (handler *EmbyHandler) VideosHandler(ctx *gin.Context) {
 	if ctx.Request.Method == http.MethodHead { // 不额外处理 HEAD 请求
-		embyServerHandler.ReverseProxy(ctx.Writer, ctx.Request)
+		handler.ReverseProxy(ctx.Writer, ctx.Request)
 		logging.Debug("VideosHandler 不处理 HEAD 请求，转发至上游服务器")
 		return
 	}
@@ -255,10 +255,10 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 	// }
 
 	logging.Debugf("请求 ItemsServiceQueryItem：%s", mediaSourceID)
-	itemResponse, err := embyServerHandler.server.ItemsServiceQueryItem(strings.Replace(mediaSourceID, "mediasource_", "", 1), 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
+	itemResponse, err := handler.client.ItemsServiceQueryItem(strings.Replace(mediaSourceID, "mediasource_", "", 1), 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
 	if err != nil {
 		logging.Warning("请求 ItemsServiceQueryItem 失败：", err)
-		embyServerHandler.ReverseProxy(ctx.Writer, ctx.Request)
+		handler.ReverseProxy(ctx.Writer, ctx.Request)
 		return
 	}
 
@@ -266,7 +266,7 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 
 	if !strings.HasSuffix(strings.ToLower(*item.Path), ".strm") { // 不是 Strm 文件
 		logging.Debug("播放本地视频：" + *item.Path + "，不进行处理")
-		embyServerHandler.ReverseProxy(ctx.Writer, ctx.Request)
+		handler.ReverseProxy(ctx.Writer, ctx.Request)
 		return
 	}
 
@@ -277,7 +277,7 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 			case constants.HTTPStrm:
 				if *mediasource.Protocol == emby.HTTP {
 					// httpStrmHandler 内部有缓存机制，锁确保串行化访问
-					ctx.Redirect(http.StatusFound, embyServerHandler.httpStrmHandler(*mediasource.Path, ctx.Request.UserAgent()))
+					ctx.Redirect(http.StatusFound, handler.httpStrmHandler(*mediasource.Path, ctx.Request.UserAgent()))
 					return
 				}
 
@@ -289,7 +289,7 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 				return
 
 			case constants.UnknownStrm:
-				embyServerHandler.ReverseProxy(ctx.Writer, ctx.Request)
+				handler.ReverseProxy(ctx.Writer, ctx.Request)
 				return
 			}
 		}
@@ -299,7 +299,7 @@ func (embyServerHandler *EmbyServerHandler) VideosHandler(ctx *gin.Context) {
 // 修改字幕
 //
 // 将 SRT 字幕转 ASS
-func (embyServerHandler *EmbyServerHandler) ModifySubtitles(rw *http.Response) error {
+func (handler *EmbyHandler) ModifySubtitles(rw *http.Response) error {
 	defer rw.Body.Close()
 	subtitile, err := io.ReadAll(rw.Body) // 读取字幕文件
 	if err != nil {
@@ -323,7 +323,7 @@ func (embyServerHandler *EmbyServerHandler) ModifySubtitles(rw *http.Response) e
 // 修改 basehtmlplayer.js
 //
 // 用于修改播放器 JS，实现跨域播放 Strm 文件（302 重定向）
-func (embyServerHandler *EmbyServerHandler) ModifyBaseHtmlPlayer(rw *http.Response) error {
+func (handler *EmbyHandler) ModifyBaseHtmlPlayer(rw *http.Response) error {
 	defer rw.Body.Close()
 	body, err := io.ReadAll(rw.Body)
 	if err != nil {
@@ -337,7 +337,7 @@ func (embyServerHandler *EmbyServerHandler) ModifyBaseHtmlPlayer(rw *http.Respon
 }
 
 // 修改首页函数
-func (embyServerHandler *EmbyServerHandler) ModifyIndex(rw *http.Response) error {
+func (handler *EmbyHandler) ModifyIndex(rw *http.Response) error {
 	var (
 		htmlFilePath string = path.Join(config.CostomDir(), "index.html")
 		htmlContent  []byte
@@ -389,4 +389,4 @@ func (embyServerHandler *EmbyServerHandler) ModifyIndex(rw *http.Response) error
 	return nil
 }
 
-var _ MediaServerHandler = (*EmbyServerHandler)(nil) // 确保 EmbyServerHandler 实现 MediaServerHandler 接口
+var _ MediaServerHandler = (*EmbyHandler)(nil) // 确保 EmbyHandler 实现 MediaServerHandler 接口
