@@ -18,11 +18,8 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id 
 		logging.Debugf("处理 HTTPStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))
 	}()
 
-	if !config.HTTPStrm.TransCode {
+	if !config.HTTPStrm.Proxy {
 		jsonChain.Set(
-			bsePath+"SupportsDirectPlay",
-			true,
-		).Set(
 			bsePath+"SupportsDirectStream",
 			false,
 		).Set(
@@ -31,10 +28,13 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id 
 		).Delete(
 			bsePath + "TranscodingUrl",
 		).Delete(
+			bsePath + "TranscodingContainer",
+		).Delete(
 			bsePath + "TranscodingSubProtocol",
 		).Delete(
-			bsePath + "TranscodingContainer",
+			bsePath + "TrancodeLiveStartIndex",
 		)
+
 		var msgs []string
 		if directStreamURL != nil {
 			msgs = append(msgs, fmt.Sprintf("原直链播放链接: %s", *directStreamURL))
@@ -49,9 +49,9 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id 
 			)
 			msgs = append(msgs, fmt.Sprintf("修改直链播放链接为: %s", directStreamURL))
 		}
-		logging.Infof("%s 强制禁止转码%s", id, strings.Join(msgs, ", "))
+		logging.Infof("%s 强制禁止串流/转码行为，%s", id, strings.Join(msgs, ", "))
 	} else {
-		logging.Infof("%s 保持原有转码设置", id)
+		logging.Infof("%s 保持原有串流/转码行为", id)
 	}
 }
 
@@ -61,11 +61,8 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id
 		logging.Debugf("处理 AlistStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))
 	}()
 
-	if !config.AlistStrm.TransCode {
+	if !config.AlistStrm.Proxy {
 		jsonChain.Set(
-			bsePath+"SupportsDirectPlay",
-			true,
-		).Set(
 			bsePath+"SupportsDirectStream",
 			false,
 		).Set(
@@ -74,9 +71,11 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id
 		).Delete(
 			bsePath + "TranscodingUrl",
 		).Delete(
+			bsePath + "TranscodingContainer",
+		).Delete(
 			bsePath + "TranscodingSubProtocol",
 		).Delete(
-			bsePath + "TranscodingContainer",
+			bsePath + "TrancodeLiveStartIndex",
 		)
 
 		var msgs []string
@@ -102,9 +101,9 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id
 			container,
 		)
 		msgs = append(msgs, fmt.Sprintf("容器为： %s", container))
-		logging.Infof("%s 强制禁止转码，%s", id, strings.Join(msgs, ", "))
+		logging.Infof("%s 强制禁止串流/转码行为，%s", id, strings.Join(msgs, ", "))
 	} else {
-		logging.Infof("%s 保持原有转码设置", id)
+		logging.Infof("%s 保持原有串流/转码行为", id)
 	}
 
 	if size == nil {

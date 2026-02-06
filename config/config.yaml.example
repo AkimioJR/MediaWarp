@@ -56,21 +56,21 @@ client:                                     # 客户端过滤器
 
 http_strm:                                  # HTTPStrm 相关配置（Strm 文件内容是 标准 HTTP URL）
   enable: true                              # 是否开启 HttpStrm 重定向
-  transcode: false                          # false：强制关闭转码 true：保持原有转码设置
+  proxy: false                              # 是否允许流量经过媒体服务器（true: 允许串流、转码行为；false: 仅支持直接播放）FNTV无效
   final_url: true                           # 对 URL 进行重定向判断，找到非重定向地址再重定向给客户端，减少客户端重定向次数（适用于 Strm 内容是局域网地址但是想要在公网之中播放）
-  prefix_list:                              # EmbyServer 中 Strm 文件的前缀（符合该前缀的 Strm 文件且被正确识别为 HTTP 协议都会路由到该规则下）
+  prefix_list:                              # 媒体服务器中 Strm 文件的前缀（符合该前缀的 Strm 文件且被正确识别为 HTTP 协议都会路由到该规则下）
     - /media/strm/http
     - /media/strm/https
 
 alist_strm:                                 # AlistStrm 相关配置（Strm 文件内容是 Alist 上文件的路径，目前仅支持适配 Alist V3）
   enable: true                              # 是否启用 AlistStrm 重定向
-  transcode: true                           # false：强制关闭转码 true：保持原有转码设置
+  proxy: true                               # 是否允许流量经过媒体服务器（true: 允许串流、转码行为；false: 仅支持直接播放）FNTV无效
   raw_url: false                            # Fasle：响应 Alist 服务器的直链（要求客户端可以访问到 Alist） true：直接响应 Alist 上游的真实链接（alist api 中的 raw_url 属性）
   list:                                     # Alist 服务关配置列表
     - addr: http://192.168.1.100:5244       # Alist 服务器地址
       username: admin                       # Alist 服务器账号
       password: adminadmin                  # Alist 服务器密码
-      prefix_list:                          # EmbyServer 中 Strm 文件的前缀（符合该前缀的 Strm 文件都会路由到该规则下）
+      prefix_list:                          # 媒体服务器中 Strm 文件的前缀（符合该前缀的 Strm 文件都会路由到该规则下）
         - /media/strm/MyAlist               # 同一个 Alist 可以有多个前缀规则
         - /mnt/cd2/strm
     - addr: https://xiaoya.com              # 可以填写多个配置
