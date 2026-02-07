@@ -30,6 +30,7 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
 [TODO LIST](#todo-list) •
 [文档](#相关文档) •
 [鸣谢](#鸣谢) •
+[贡献者](#star-history) •
 [Star History](#star-history)
 
 </div>
@@ -109,6 +110,12 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
 - [Nolovenodie/emby-crx](https://github.com/Nolovenodie/emby-crx)
 - [newday-life/jellyfin-crx](https://github.com/newday-life/jellyfin-crx)
 - [RiderLty/fontInAss](https://github.com/RiderLty/fontInAss)
+
+# 贡献者
+<a href="https://github.com/AkimioJR/MediaWarp/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=AkimioJR/MediaWarp" />
+</a>
+
 
 # Star History
 <a href="https://github.com/AkimioJR/MediaWarp/stargazers">
