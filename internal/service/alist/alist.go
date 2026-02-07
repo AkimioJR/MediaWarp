@@ -209,3 +209,19 @@ func (client *AlistClient) GetFileURL(p string, isRawURL bool) (string, error) {
 	url.WriteString(path.Join("/d", client.userInfo.BasePath, p))
 	return url.String(), nil
 }
+
+func (client *AlistClient) GetFsOther(req *FsOtherRequest, result any) error {
+	respData, err := doRequest[any](client, req)
+	if err != nil {
+		return fmt.Errorf("请求失败: %w", err)
+	}
+	respBytes, err := json.Marshal(respData)
+	if err != nil {
+		return fmt.Errorf("序列化响应数据失败: %w", err)
+	}
+	err = json.Unmarshal(respBytes, &result)
+	if err != nil {
+		return fmt.Errorf("反序列化响应数据失败: %w", err)
+	}
+	return nil
+}

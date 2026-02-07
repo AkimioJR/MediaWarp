@@ -64,6 +64,28 @@ func (req *FsGetRequest) GetCacheKey() string {
 	return req.GetAPIPath() + req.Path + req.Password + strconv.Itoa(int(req.Page)) + strconv.Itoa(int(req.PerPage)) + strconv.FormatBool(req.Refresh)
 }
 
+type FsOtherRequest struct {
+	Path     string `json:"path"`
+	Method   string `json:"method"`
+	Password string `json:"password"`
+}
+
+func (FsOtherRequest) GetMethod() string {
+	return http.MethodPost
+}
+
+func (FsOtherRequest) GetAPIPath() string {
+	return "/api/fs/other"
+}
+
+func (FsOtherRequest) NeedAuth() bool {
+	return true
+}
+
+func (req *FsOtherRequest) GetCacheKey() string {
+	return req.GetAPIPath() + req.Path + req.Method + req.Password
+}
+
 type AuthLoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -88,7 +110,7 @@ func (req *AuthLoginRequest) GetCacheKey() string {
 type MeRequest struct{}
 
 func (MeRequest) GetMethod() string {
-    return http.MethodGet
+	return http.MethodGet
 }
 
 func (MeRequest) GetAPIPath() string {
