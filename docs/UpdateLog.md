@@ -118,3 +118,10 @@
 - 2026.2.6: v0.2.0
   - 重构 ModifyPlaybackInfo 相关方法
   - 添加飞牛影视支持
+- 2026.2.7: v0.2.1
+  - 添加 AlistStrm 重定向 URL 耗时日志
+  - 修复 ModifyStream 响应体处理和状态码检查逻辑
+  - 更新字幕缓存正则表达式以支持下载接口
+  - 移除 FNTV 正则的大小写不敏感标志，规范变量命名
+  - 调整 HTTPStrm 和 AlistStrm 设置，优化 PlaybackInfo 处理
+  - 添加兼容模式选项以优化 HTTPStrm 请求
