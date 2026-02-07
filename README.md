@@ -64,8 +64,9 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
   - ~~BeautifyCSS：Emby 美化 CSS 样式~~（已移除，若有需求请实用通过自定义 Web.Head 功能实现）
 
 - 飞牛影视
-  <img src="./img/FNTV-AlistStrm.png" alt="AlistStrm" width=310px /> 
-  <img src="./img/FNTV-HTTPStrm.png" alt="HTTPStrm" width=310px />
+  
+  ![HTTPStrm](./img/FNTV-HTTPStrm.png)
+  ![AlistStrm](./img/FNTV-AlistStrm.png)
 
 # TODO LIST
 - [x] HTTPStrm 实现 302 重定向
