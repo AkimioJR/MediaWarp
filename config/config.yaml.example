@@ -22,8 +22,8 @@ cache:                                        # 缓存相关设置
   enable: true                                # 是否启用 HTTPStrm 重定向内存缓存
   http_strm_ttl: 1m                           # 重定向缓存有效期（当启用 http_strm 中的 final_url 配置项时才生效）
   alist_api_ttl: 10m                          # Alist API 缓存有效期
-  image_ttl: 72h                              # 图片缓存有效时间
-  subtitle_ttl: 744h                          # 字幕缓存有效时间
+  image_ttl: 10m                              # 图片缓存有效时间
+  subtitle_ttl: 2h                            # 字幕缓存有效时间
 
 web:                                        # Web 页面修改相关设置（FNTV 不支持）
   enable: false                             # 总开关
@@ -58,6 +58,7 @@ http_strm:                                  # HTTPStrm 相关配置（Strm 文�
   enable: true                              # 是否开启 HttpStrm 重定向
   proxy: false                              # 是否允许流量经过媒体服务器（true: 允许串流、转码行为；false: 仅支持直接播放）FNTV无效
   final_url: true                           # 对 URL 进行重定向判断，找到非重定向地址再重定向给客户端，减少客户端重定向次数（适用于 Strm 内容是局域网地址但是想要在公网之中播放）
+  compatibility_mode: false                 # 兼容模式，开启后将使用更兼容但效率较低的方式获取最终 URL
   prefix_list:                              # 媒体服务器中 Strm 文件的前缀（符合该前缀的 Strm 文件且被正确识别为 HTTP 协议都会路由到该规则下）
     - /media/strm/http
     - /media/strm/https

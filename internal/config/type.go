@@ -67,10 +67,11 @@ type ClientFilterSetting struct {
 
 // HTTPStrm播放设置
 type HTTPStrmSetting struct {
-	Enable     bool     `yaml:"enable"`
-	Proxy      bool     `yaml:"proxy"`     // 开启后支持媒体服务器串流、转码播放
-	FinalURL   bool     `yaml:"final_url"` // 对 URL 进行重定向判断，找到非重定向地址再重定向给客户端，减少客户端重定向次数
-	PrefixList []string `yaml:"prefix_list"`
+	Enable            bool     `yaml:"enable"`
+	Proxy             bool     `yaml:"proxy"`              // 开启后支持媒体服务器串流、转码播放
+	FinalURL          bool     `yaml:"final_url"`          // 对 URL 进行重定向判断，找到非重定向地址再重定向给客户端，减少客户端重定向次数
+	CompatibilityMode bool     `yaml:"compatibility_mode"` // 兼容模式，开启后将使用更兼容但效率较低的方式获取最终 URL
+	PrefixList        []string `yaml:"prefix_list"`
 }
 
 // AlistStrm具体设置

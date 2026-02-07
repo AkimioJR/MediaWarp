@@ -113,6 +113,13 @@ func getFinalURL(client *http.Client, rawURL string, ua string) (string, error) 
 	visited := make(map[string]struct{}, MaxRedirectAttempts)
 	redirectChain := make([]string, 0, MaxRedirectAttempts+1)
 
+	var method string
+	if config.HTTPStrm.CompatibilityMode {
+		method = http.MethodGet
+	} else {
+		method = http.MethodHead
+	}
+
 	// 跟踪重定向链
 	for i := 0; i <= MaxRedirectAttempts; i++ {
 		// 检测循环重定向
@@ -122,7 +129,7 @@ func getFinalURL(client *http.Client, rawURL string, ua string) (string, error) 
 		visited[currentURL] = struct{}{}
 		redirectChain = append(redirectChain, currentURL)
 
-		req, err := http.NewRequest(http.MethodHead, currentURL, nil) // 创建 HEAD 请求（更高效，只获取头部信息）
+		req, err := http.NewRequest(method, currentURL, nil)
 		if err != nil {
 			return "", fmt.Errorf("创建请求失败: %w", err)
 		}
