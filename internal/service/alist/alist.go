@@ -80,6 +80,10 @@ func (client *AlistClient) GetUsername() string {
 	return client.username
 }
 
+func (client *AlistClient) GetUserInfo() UserInfoData {
+	return client.userInfo
+}
+
 // 得到一个可用的 Token
 //
 // 先从缓存池中读取，若过期或者未找到则重新生成
