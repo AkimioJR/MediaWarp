@@ -7,6 +7,11 @@ snapshot:
 
 release:
   name_template: "{{ .Tag }}"
+  extra_files:
+    - glob: ./config/config.yaml.example
+      name_template: config.yaml
+    - glob: ./LICENSE
+
 before:
   hooks:
     - go mod download
@@ -132,8 +137,9 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - "^doc:"
+      - "^docs:"
       - "^test:"
       - "^build:"
       - "^release:"
       - "^issue:"
+      - "^MediaWarp"
