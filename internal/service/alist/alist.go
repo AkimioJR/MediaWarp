@@ -210,18 +210,32 @@ func (client *AlistClient) GetFileURL(p string, isRawURL bool) (string, error) {
 	return url.String(), nil
 }
 
-func (client *AlistClient) GetFsOther(req *FsOtherRequest, result any) error {
+func (client *AlistClient) GetFsOther(req *FsOtherRequest) (any, error) {
 	respData, err := doRequest[any](client, req)
 	if err != nil {
-		return fmt.Errorf("请求失败: %w", err)
+		return nil, fmt.Errorf("请求失败: %w", err)
 	}
-	respBytes, err := json.Marshal(respData)
+	return *respData, nil
+}
+
+func (client *AlistClient) GetVideoPreviewData(p, pwd string) (*VideoPreviewData, error) {
+	req := FsOtherRequest{
+		Path:     p,
+		Method:   "video_preview",
+		Password: pwd,
+	}
+	resp, err := client.GetFsOther(&req)
 	if err != nil {
-		return fmt.Errorf("序列化响应数据失败: %w", err)
+		return nil, fmt.Errorf("获取视频预览信息失败: %w", err)
 	}
-	err = json.Unmarshal(respBytes, &result)
+	dataBytes, err := json.Marshal(resp)
 	if err != nil {
-		return fmt.Errorf("反序列化响应数据失败: %w", err)
+		return nil, fmt.Errorf("解析视频预览信息失败: %w", err)
 	}
-	return nil
+	var data VideoPreviewData
+	err = json.Unmarshal(dataBytes, &data)
+	if err != nil {
+		return nil, fmt.Errorf("解析视频预览信息失败: %w", err)
+	}
+	return &data, nil
 }

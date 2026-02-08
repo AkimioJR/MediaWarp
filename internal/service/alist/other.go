@@ -1,6 +1,6 @@
 package alist
 
-type AliyunVideoData struct {
+type VideoPreviewData struct {
 	DriveId              string `json:"drive_id"`
 	FileId               string `json:"file_id"`
 	VideoPreviewPlayInfo struct {
