@@ -124,7 +124,7 @@ func alistStrmHandler(content string, alistAddr string, needTranscodeResourceInf
 	if needTranscodeResourceInfo {
 		previewData, err := client.GetVideoPreviewData(content, "")
 		if err != nil {
-			logging.Warningf("%#v 获取视频预览信息失败：%w", fileData, err)
+			logging.Warningf("%#v 获取视频预览信息失败：%+v", fileData, err)
 			return &res, nil // 即使获取预览信息失败，也返回基本的重定向 URL 和文件大小
 		}
 		for _, task := range previewData.VideoPreviewPlayInfo.LiveTranscodingTaskList {
@@ -141,7 +141,7 @@ func alistStrmHandler(content string, alistAddr string, needTranscodeResourceInf
 				}
 				tsInt, err := strconv.ParseInt(expireStr, 10, 64)
 				if err != nil {
-					logging.Warningf("解析转码资源 URL 中的 x-oss-expires 参数失败: %w, URL: %s", err, task.Url)
+					logging.Warningf("解析转码资源 URL 中的 x-oss-expires 参数失败: %+v, URL: %s", err, task.Url)
 					continue
 				}
 				info := TranscodeResourceInfo{
