@@ -245,10 +245,13 @@ func (handler *JellyfinHandler) VideosHandler(ctx *gin.Context) {
 				}
 
 			case constants.AlistStrm: // 无需判断 *mediasource.Container 是否以Strm结尾，当 AlistStrm 存储的位置有对应的文件时，*mediasource.Container 会被设置为文件后缀
-				redirectURL := alistStrmHandler(*mediasource.Path, opt.(string))
-				if redirectURL != "" {
-					ctx.Redirect(http.StatusFound, redirectURL)
+				res, err := alistStrmHandler(*mediasource.Path, opt.(string), false)
+				if err != nil {
+					logging.Warningf("获取 AlistStrm 重定向 URL 失败:%#v", err)
+					handler.ReverseProxy(ctx.Writer, ctx.Request)
+					return
 				}
+				ctx.Redirect(http.StatusFound, res.url)
 				return
 
 			case constants.UnknownStrm:

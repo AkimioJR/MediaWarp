@@ -132,14 +132,36 @@ func (hanler *FNTVHandler) ModifyStream(rw *http.Response) error {
 			return nil
 		}
 
-		redirectURL := alistStrmHandler(remoteFilepathRes.String(), opt.(string))
+		res, err := alistStrmHandler(remoteFilepathRes.String(), opt.(string), true)
+		if err != nil {
+			logging.Warningf("获取 AlistStrm 重定向 URL 失败: %#v", err)
+			rw.Body = io.NopCloser(bytes.NewReader(data))
+			return nil
+		}
 		jsonChain.Set(
 			"data.direct_link_qualities.0.resolution",
 			"AlistStrm 直链 - 原画",
 		).Set(
 			"data.direct_link_qualities.0.url",
-			redirectURL,
-		)
+			res.url,
+		).Set("data.file_stream.size", res.fileSize)
+
+		for i, resource := range res.transcodeResources {
+			basePath := "data.direct_link_qualities." + strconv.Itoa(i+1) + "."
+			jsonChain.Set(
+				basePath+"resolution",
+				"AlistStrm 直链 - 转码 "+resource.resolution.name,
+			).Set(
+				basePath+"url",
+				resource.url,
+			).Set(
+				basePath+"is_m3u8",
+				resource.isM3U8,
+			).Set(
+				basePath+"expire_at",
+				int64(time.Since(resource.expireAt).Seconds()),
+			)
+		}
 
 	default:
 		logging.Debugf("%s 未匹配任何 Strm 类型，保持原有播放链接不变", filePath)

@@ -4,9 +4,14 @@ import (
 	"MediaWarp/internal/config"
 	"MediaWarp/internal/logging"
 	"MediaWarp/internal/service"
+	"MediaWarp/internal/service/alist"
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/allegro/bigcache/v3"
@@ -63,22 +68,96 @@ func getHTTPStrmHandler() (StrmHandlerFunc, error) {
 	}, nil
 }
 
-func alistStrmHandler(content string, alistAddr string) string {
+type resolutionInfo struct {
+	width  uint
+	height uint
+	name   string
+}
+type TranscodeResourceInfo struct {
+	url        string
+	isM3U8     bool
+	expireAt   time.Time
+	resolution resolutionInfo
+}
+
+type alistStrmResult struct {
+	url                string                  // 重定向 URL
+	fileSize           int64                   // 文件大小（字节）
+	transcodeResources []TranscodeResourceInfo // 转码资源列表
+}
+
+func alistStrmHandler(content string, alistAddr string, needTranscodeResourceInfo bool) (*alistStrmResult, error) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("获取 AlistStrm 重定向 URL 耗时：%s", time.Since(startTime))
 	}()
 
-	alistClient, err := service.GetAlistClient(alistAddr)
+	client, err := service.GetAlistClient(alistAddr)
 	if err != nil {
-		logging.Warning("获取 AlistClient 失败：", err)
-		return ""
+		return nil, fmt.Errorf("获取 AlistClient 失败：%w", err)
 	}
-	url, err := alistClient.GetFileURL(content, config.AlistStrm.RawURL)
+
+	fileData, err := client.FsGet(&alist.FsGetRequest{Path: content, Page: 1})
 	if err != nil {
-		logging.Warning("获取文件 URL 失败：", err)
-		return ""
+		return nil, fmt.Errorf("获取文件信息失败：%w", err)
 	}
-	logging.Infof("AlistStrm 重定向至：%s", url)
-	return url
+
+	res := alistStrmResult{
+		transcodeResources: make([]TranscodeResourceInfo, 0),
+	}
+
+	if config.AlistStrm.RawURL {
+		res.url = fileData.RawURL
+	} else {
+		var u strings.Builder
+		u.WriteString(client.GetEndpoint())
+		if fileData.Sign != "" {
+			u.WriteString("?sign=" + fileData.Sign)
+		}
+		u.WriteString(path.Join("/d", client.GetUserInfo().BasePath, content))
+		res.url = u.String()
+	}
+	logging.Infof("AlistStrm 重定向至：%s", res.url)
+
+	res.fileSize = fileData.Size
+
+	if needTranscodeResourceInfo {
+		previewData, err := client.GetVideoPreviewData(content, "")
+		if err != nil {
+			logging.Warningf("%#v 获取视频预览信息失败：%w", fileData, err)
+			return &res, nil // 即使获取预览信息失败，也返回基本的重定向 URL 和文件大小
+		}
+		for _, task := range previewData.VideoPreviewPlayInfo.LiveTranscodingTaskList {
+			if task.Url != "" {
+				u, err := url.Parse(task.Url)
+				if err != nil {
+					logging.Warningf("解析转码资源 URL 失败: %s, URL: %s", err, task.Url)
+					continue
+				}
+				expireStr := u.Query().Get("x-oss-expires")
+				if expireStr == "" {
+					logging.Warningf("转码资源 URL 中未找到 x-oss-expires 参数，URL: %s", task.Url)
+					continue
+				}
+				tsInt, err := strconv.ParseInt(expireStr, 10, 64)
+				if err != nil {
+					logging.Warningf("解析转码资源 URL 中的 x-oss-expires 参数失败: %w, URL: %s", err, task.Url)
+					continue
+				}
+				info := TranscodeResourceInfo{
+					url:      task.Url,
+					isM3U8:   strings.HasSuffix(u.Path, ".m3u8"),
+					expireAt: time.Unix(tsInt, 0),
+					resolution: resolutionInfo{
+						width:  uint(task.TemplateHeight),
+						height: uint(task.TemplateHeight),
+						name:   task.TemplateName,
+					},
+				}
+				res.transcodeResources = append(res.transcodeResources, info)
+			}
+		}
+	}
+
+	return &res, nil
 }
