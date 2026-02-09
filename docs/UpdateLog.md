@@ -125,3 +125,7 @@
   - 移除 FNTV 正则的大小写不敏感标志，规范变量命名
   - 调整 HTTPStrm 和 AlistStrm 设置，优化 PlaybackInfo 处理
   - 添加兼容模式选项以优化 HTTPStrm 请求
+- 2026.2.8: v0.2.2
+  - 飞牛影视 AlistStrm 模式支持播放网盘转码视频
+  - 修复 Emby PlaybackInfo 中 DirectStreamURL 生成错误问题
+  - 提高 Emby 的兼容性

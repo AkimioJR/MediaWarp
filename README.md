@@ -83,6 +83,7 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
 - [x] 适配 Jellyfin
 - [ ] 适配 Plex
 - [x] 适配 飞牛影视
+- [x] 支持播放网盘转码内容（仅飞牛影视 AlistStrm 模式）
 
 - [ ] ~~利用 Redis 做数据缓存~~
   > 需求不大，放弃，有需要可以直接使用 Nginx 或者其他反向代理工具的缓存
