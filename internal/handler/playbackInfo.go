@@ -79,14 +79,15 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, it
 	jsonChain.Set(
 		bsePath+"Container",
 		container,
+	).Set(
+		bsePath+"SupportsDirectStream",
+		true,
 	)
+
 	msgs = append(msgs, fmt.Sprintf("容器为： %s", container))
 
 	if !config.AlistStrm.Proxy {
 		jsonChain.Set(
-			bsePath+"SupportsDirectStream",
-			false,
-		).Set(
 			bsePath+"SupportsTranscoding",
 			false,
 		).Delete(
@@ -98,9 +99,9 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, it
 		).Delete(
 			bsePath + "TrancodeLiveStartIndex",
 		)
-		msgs = append(msgs, "禁止串流/转码行为")
+		msgs = append(msgs, "禁止转码行为")
 	} else {
-		msgs = append(msgs, "保持原有串流/转码行为")
+		msgs = append(msgs, "保持原有转码行为")
 	}
 
 	if directStreamURL != nil {
