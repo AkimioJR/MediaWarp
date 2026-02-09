@@ -164,6 +164,7 @@ func (handler *EmbyHandler) ModifyPlaybackInfo(rw *http.Response) error {
 				jsonChain,
 				bsePath,
 				*mediasource.ItemID,
+				*mediasource.ID,
 				mediasource.DirectStreamURL,
 			)
 
@@ -171,6 +172,7 @@ func (handler *EmbyHandler) ModifyPlaybackInfo(rw *http.Response) error {
 			processAlistStrmPlaybackInfo(
 				jsonChain,
 				bsePath,
+				*mediasource.ItemID,
 				*mediasource.ID,
 				opt.(string),
 				mediasource.DirectStreamURL,

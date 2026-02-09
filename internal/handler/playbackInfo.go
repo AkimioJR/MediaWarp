@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id string, directStreamURL *string) {
+func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, itemId string, id string, directStreamURL *string) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 HTTPStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))
@@ -42,7 +42,7 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id 
 			if err != nil {
 				logging.Warning("解析API键值对失败：", err)
 			}
-			directStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", id, id, apikeypair)
+			directStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", itemId, id, apikeypair)
 			jsonChain.Set(
 				bsePath+"DirectStreamUrl",
 				directStreamURL,
@@ -55,7 +55,7 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id 
 	}
 }
 
-func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id string, alistAddr string, directStreamURL *string, filepath string, size *int64) {
+func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id string, itemId string, alistAddr string, directStreamURL *string, filepath string, size *int64) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 AlistStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))
@@ -81,7 +81,7 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id
 		var msgs []string
 		if directStreamURL != nil {
 			msgs = append(msgs, fmt.Sprintf("原直链播放链接: %s", *directStreamURL))
-			url := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true", id, id)
+			url := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true", id, itemId)
 
 			apikeypair, err := utils.ResolveEmbyAPIKVPairs(&url)
 			if err != nil {
