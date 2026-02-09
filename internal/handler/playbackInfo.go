@@ -55,7 +55,7 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, ite
 	}
 }
 
-func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, id string, itemId string, alistAddr string, directStreamURL *string, filepath string, size *int64) {
+func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, itemId string, id string, alistAddr string, directStreamURL *string, filepath string, size *int64) {
 	startTime := time.Now()
 	defer func() {
 		logging.Debugf("处理 AlistStrm %s PlaybackInfo 耗时：%s", id, time.Since(startTime))
