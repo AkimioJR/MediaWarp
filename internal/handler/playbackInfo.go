@@ -28,7 +28,7 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, ite
 	if !config.HTTPStrm.Proxy {
 		jsonChain.Set(
 			bsePath+"SupportsDirectStream",
-			false,
+			true,
 		).Set(
 			bsePath+"SupportsTranscoding",
 			false,
