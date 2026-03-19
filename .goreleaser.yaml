@@ -2,6 +2,10 @@ version: 2
 
 project_name: MediaWarp
 
+git:
+  ignore_tags:
+    - pre-release
+
 snapshot:
   version_template: "{{ incpatch .Version }}-PreRelease-{{ .ShortCommit }}"
 
