@@ -5,7 +5,6 @@ ARG COMMIT_HASH=unknown
 ARG BUILD_DATE=unknown
 
 ENV GO111MODULE=on \
-    GOPROXY=https://goproxy.io,direct \
     GOTOOLCHAIN=auto
 
 WORKDIR /builder
