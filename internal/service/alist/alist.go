@@ -22,7 +22,7 @@ type alistToken struct {
 	expireAt time.Time    // 令牌过期时间
 	mutex    sync.RWMutex // 令牌锁
 }
-type AlistClient struct {
+type Client struct {
 	endpoint *url.URL // 服务器入口 URL
 	username string   // 用户名
 	password string   // 密码
@@ -34,8 +34,8 @@ type AlistClient struct {
 	cache  *bigcache.BigCache
 }
 
-// 获得AlistClient实例
-func NewAlistClient(addr string, username string, password string, token *string) (*AlistClient, error) {
+// 获得Client实例
+func New(addr string, username string, password string, token *string) (*Client, error) {
 	endpoint, err := url.Parse(addr)
 	if err != nil {
 		return nil, fmt.Errorf("无效的 Alist 地址: %w", err)
@@ -44,7 +44,7 @@ func NewAlistClient(addr string, username string, password string, token *string
 		endpoint.Scheme = "http"
 	}
 	endpoint.Path = ""
-	client := AlistClient{
+	client := Client{
 		endpoint: endpoint,
 		username: username,
 		password: password,
@@ -78,25 +78,25 @@ func NewAlistClient(addr string, username string, password string, token *string
 // 得到服务器入口
 //
 // 避免直接访问 endpoint 字段
-func (client *AlistClient) GetEndpoint() string {
+func (client *Client) GetEndpoint() string {
 	return client.endpoint.String()
 }
 
 // 得到用户名
 //
 // 避免直接访问 username 字段
-func (client *AlistClient) GetUsername() string {
+func (client *Client) GetUsername() string {
 	return client.username
 }
 
-func (client *AlistClient) GetUserInfo() UserInfoData {
+func (client *Client) GetUserInfo() UserInfoData {
 	return client.userInfo
 }
 
 // 得到一个可用的 Token
 //
 // 先从缓存池中读取，若过期或者未找到则重新生成
-func (client *AlistClient) getToken() (string, error) {
+func (client *Client) getToken() (string, error) {
 	var tokenDuration = 2*24*time.Hour - 5*time.Minute // Token 有效期为 2 天，提前 5 分钟刷新
 
 	client.token.mutex.RLock()
@@ -120,7 +120,7 @@ func (client *AlistClient) getToken() (string, error) {
 	return loginData.Token, nil
 }
 
-func doRequest[T any](client *AlistClient, r Request) (*T, error) {
+func doRequest[T any](client *Client, r Request) (*T, error) {
 	var resp AlistResponse[T]
 	cacheKey := r.GetCacheKey()
 	if cacheKey != "" && client.cache != nil {
@@ -175,7 +175,7 @@ func doRequest[T any](client *AlistClient, r Request) (*T, error) {
 // ==========Alist API(v3) 相关操作==========
 
 // 登录Alist（获取一个新的Token）
-func (client *AlistClient) authLogin() (*AuthLoginData, error) {
+func (client *Client) authLogin() (*AuthLoginData, error) {
 	req := AuthLoginRequest{
 		Username: client.GetUsername(),
 		Password: client.password,
@@ -189,7 +189,7 @@ func (client *AlistClient) authLogin() (*AuthLoginData, error) {
 }
 
 // 获取某个文件/目录信息
-func (client *AlistClient) FsGet(req *FsGetRequest) (*FsGetData, error) {
+func (client *Client) FsGet(req *FsGetRequest) (*FsGetData, error) {
 	respData, err := doRequest[FsGetData](client, req)
 	if err != nil {
 		return nil, fmt.Errorf("获取文件/目录信息失败: %w", err)
@@ -197,7 +197,7 @@ func (client *AlistClient) FsGet(req *FsGetRequest) (*FsGetData, error) {
 	return respData, nil
 }
 
-func (client *AlistClient) Me() (*UserInfoData, error) {
+func (client *Client) Me() (*UserInfoData, error) {
 	data, err := doRequest[UserInfoData](client, &MeRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("获取用户信息失败: %w", err)
@@ -206,7 +206,7 @@ func (client *AlistClient) Me() (*UserInfoData, error) {
 }
 
 // GetFileURL 获取文件的可访问 URL
-func (client *AlistClient) GetFileURL(p string, isRawURL bool) (string, error) {
+func (client *Client) GetFileURL(p string, isRawURL bool) (string, error) {
 	fileData, err := client.FsGet(&FsGetRequest{Path: p, Page: 1})
 	if err != nil {
 		return "", fmt.Errorf("获取文件信息失败：%w", err)
@@ -223,7 +223,7 @@ func (client *AlistClient) GetFileURL(p string, isRawURL bool) (string, error) {
 	return url.String(), nil
 }
 
-func (client *AlistClient) GetFsOther(req *FsOtherRequest) (any, error) {
+func (client *Client) GetFsOther(req *FsOtherRequest) (any, error) {
 	respData, err := doRequest[any](client, req)
 	if err != nil {
 		return nil, fmt.Errorf("请求失败: %w", err)
@@ -231,7 +231,7 @@ func (client *AlistClient) GetFsOther(req *FsOtherRequest) (any, error) {
 	return *respData, nil
 }
 
-func (client *AlistClient) GetVideoPreviewData(p, pwd string) (*VideoPreviewData, error) {
+func (client *Client) GetVideoPreviewData(p, pwd string) (*VideoPreviewData, error) {
 	req := FsOtherRequest{
 		Path:     p,
 		Method:   "video_preview",

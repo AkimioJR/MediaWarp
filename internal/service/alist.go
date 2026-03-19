@@ -26,21 +26,21 @@ func InitAlistClient() {
 //
 // 将Alist客户端注册到全局Map中
 func registerAlistClient(addr string, username string, password string, token *string) {
-	alistClient, err := alist.NewAlistClient(addr, username, password, token)
+	c, err := alist.New(addr, username, password, token)
 	if err != nil {
 		logging.Warningf("注册 Alist 客户端 %s 失败：%s", addr, err)
 		return
 	}
-	alistClientMap.Store(alistClient.GetEndpoint(), alistClient)
+	alistClientMap.Store(c.GetEndpoint(), c)
 }
 
 // 获取Alist客户端
 //
 // 从全局Map中获取Alist客户端
-func GetAlistClient(addr string) (*alist.AlistClient, error) {
+func GetAlistClient(addr string) (*alist.Client, error) {
 	endpoint := utils.GetEndpoint(addr)
 	if client, ok := alistClientMap.Load(endpoint); ok {
-		return client.(*alist.AlistClient), nil
+		return client.(*alist.Client), nil
 	}
 	return nil, fmt.Errorf("%s 未注册到 Alist 客户端列表中", endpoint)
 }
