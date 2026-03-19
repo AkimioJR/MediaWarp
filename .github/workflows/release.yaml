@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   packages: write
+  actions: write
 
 jobs:
   release:
@@ -17,6 +18,41 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
+
+      - name: Cancel same-commit dev workflow runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha;
+
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              owner,
+              repo,
+              workflow_id: 'dev.yaml',
+              event: 'push',
+              per_page: 100,
+            });
+
+            const targets = runs.filter((run) =>
+              run.head_sha === sha &&
+              ['queued', 'in_progress', 'waiting', 'pending', 'requested'].includes(run.status)
+            );
+
+            if (targets.length === 0) {
+              core.info(`No running dev workflow found for commit ${sha}.`);
+              return;
+            }
+
+            for (const run of targets) {
+              core.info(`Cancelling dev run #${run.run_number} (id=${run.id}, status=${run.status})`);
+              await github.rest.actions.cancelWorkflowRun({
+                owner,
+                repo,
+                run_id: run.id,
+              });
+            }
 
       - name: Set up Go
         uses: actions/setup-go@v5

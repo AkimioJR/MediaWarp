@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags-ignore:
+      - "v*"
     paths:
       - "**.go"
       - "go.mod"
@@ -12,6 +14,7 @@ on:
 
 jobs:
   builder:
+    if: ${{ github.ref_type != 'tag' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
