@@ -46,87 +46,31 @@ builds:
       - -X MediaWarp/internal/config.commitHash={{ .FullCommit }}
       - -X MediaWarp/internal/config.buildDate={{ .Date }}
 
-dockers:
+dockers_v2:
   - dockerfile: docker/Dockerfile.goreleaser
-    use: buildx
-    skip_push: false
-    build_flag_templates:
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-    goos: linux
-    goarch: amd64
-    goamd64: v1
-    image_templates:
-      - "akimio/mediawarp:{{ .Version }}-amd64"
-
-  - dockerfile: docker/Dockerfile.goreleaser
-    use: buildx
-    skip_push: false
-    build_flag_templates:
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-    goos: linux
-    goarch: arm64
-    image_templates:
-      - "akimio/mediawarp:{{ .Version }}-arm64"
-
-  - dockerfile: docker/Dockerfile.goreleaser
-    use: buildx
-    skip_push: false
-    build_flag_templates:
-      - "--platform=linux/arm/v6"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-    goos: linux
-    goarch: arm
-    goarm: "6"
-    image_templates:
-      - "akimio/mediawarp:{{ .Version }}-armv6"
-
-  - dockerfile: docker/Dockerfile.goreleaser
-    use: buildx
-    skip_push: false
-    build_flag_templates:
-      - "--platform=linux/arm/v7"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.version={{ .Version }}"
-    goos: linux
-    goarch: arm
-    goarm: "7"
-    image_templates:
-      - "akimio/mediawarp:{{ .Version }}-armv7"
-
-docker_manifests:
-  - name_template: "akimio/mediawarp:latest"
-    image_templates:
-      - "akimio/mediawarp:{{ .Version }}-amd64"
-      - "akimio/mediawarp:{{ .Version }}-arm64"
-      - "akimio/mediawarp:{{ .Version }}-armv6"
-      - "akimio/mediawarp:{{ .Version }}-armv7"
-  - name_template: "akimio/mediawarp:{{ .Version }}"
-    image_templates:
-      - "akimio/mediawarp:{{ .Version }}-amd64"
-      - "akimio/mediawarp:{{ .Version }}-arm64"
-      - "akimio/mediawarp:{{ .Version }}-armv6"
-      - "akimio/mediawarp:{{ .Version }}-armv7"
+    images:
+      - akimio/mediawarp
+    tags:
+      - "{{ .Version }}"
+      - "{{ if not .IsSnapshot }}latest{{ end }}"
+    labels:
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+      - linux/arm/v6
+      - linux/arm/v7
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{- .Os }}_{{ .Arch }}{{- if .Arm}}v{{ .Arm }}{{- end}}"
     # 对于 Windows 存档使用 zip 格式
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - src: LICENSE
       - src: README.md

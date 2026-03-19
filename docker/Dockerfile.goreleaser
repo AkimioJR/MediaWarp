@@ -1,6 +1,7 @@
 FROM alpine:latest
 
-COPY MediaWarp ./MediaWarp
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/MediaWarp ./MediaWarp
 
 RUN chmod +x ./MediaWarp
 
