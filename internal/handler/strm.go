@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -106,16 +105,9 @@ func alistStrmHandler(content string, alistAddr string, needTranscodeResourceInf
 		transcodeResources: make([]TranscodeResourceInfo, 0),
 	}
 
-	if config.AlistStrm.RawURL {
-		res.url = fileData.RawURL
-	} else {
-		var u strings.Builder
-		u.WriteString(client.GetEndpoint())
-		if fileData.Sign != "" {
-			u.WriteString("?sign=" + fileData.Sign)
-		}
-		u.WriteString(path.Join("/d", client.GetUserInfo().BasePath, content))
-		res.url = u.String()
+	res.url, err = client.GetFileURL(content, config.AlistStrm.RawURL)
+	if err != nil {
+		return nil, fmt.Errorf("获取文件 %s 的 URL 失败：%w", content, err)
 	}
 	logging.Infof("AlistStrm 重定向至：%s", res.url)
 

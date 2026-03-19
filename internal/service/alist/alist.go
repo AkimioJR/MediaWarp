@@ -207,10 +207,10 @@ func (client *AlistClient) GetFileURL(p string, isRawURL bool) (string, error) {
 	}
 	var url strings.Builder
 	url.WriteString(client.GetEndpoint())
+	url.WriteString(path.Join("/d", client.userInfo.BasePath, p))
 	if fileData.Sign != "" {
 		url.WriteString("?sign=" + fileData.Sign)
 	}
-	url.WriteString(path.Join("/d", client.userInfo.BasePath, p))
 	return url.String(), nil
 }
 
