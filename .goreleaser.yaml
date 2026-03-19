@@ -26,17 +26,11 @@ builds:
       - darwin
     goarch:
       - amd64
-      - arm
       - arm64
+      - arm
     goarm:
-      - "5"
-      - "6"
       - "7"
     ignore:
-      - goos: windows
-        goarm: 5
-      - goos: windows
-        goarm: 6
       - goos: windows
         goarm: 7
     binary: "{{ .ProjectName }}"
@@ -65,8 +59,8 @@ dockers_v2:
     platforms:
       - linux/amd64
       - linux/arm64
-      - linux/arm/v6
       - linux/arm/v7
+      - linux/riscv64
 
 archives:
   - formats: [tar.gz]
