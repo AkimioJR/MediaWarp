@@ -129,3 +129,8 @@
   - 飞牛影视 AlistStrm 模式支持播放网盘转码视频
   - 修复 Emby PlaybackInfo 中 DirectStreamURL 生成错误问题
   - 提高 Emby 的兼容性
+- 2026.3.19: v0.2.3
+  - 修复 AlistStrm 非 raw_url 模式下 url 拼接错误问题
+  - 重构 Alist 模块相关代码
+  - 更新 Go 版本和依赖版本以及使用更新的语法表达
+  - 禁止 HTTPStrm 模式下 proxy 时移除修改 SupportsDirectStream 为 false 的行为，提高兼容性
