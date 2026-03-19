@@ -1,12 +1,13 @@
 package jellyfin
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/utils"
 	"encoding/json"
 	"io"
 	"net/url"
 	"strconv"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/utils"
 )
 
 type Client struct {

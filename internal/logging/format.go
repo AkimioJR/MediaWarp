@@ -1,11 +1,12 @@
 package logging
 
 import (
-	"MediaWarp/constants"
 	"bytes"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/constants"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

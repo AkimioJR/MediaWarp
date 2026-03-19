@@ -1,11 +1,6 @@
 package handler
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/logging"
-	"MediaWarp/internal/service/emby"
-	"MediaWarp/utils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -19,6 +14,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
+	"github.com/AkimioJR/MediaWarp/internal/service/emby"
+	"github.com/AkimioJR/MediaWarp/utils"
 
 	"github.com/gin-gonic/gin"
 )

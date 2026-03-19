@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/logging"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,9 +1,10 @@
 package logging
 
 import (
-	"MediaWarp/internal/config"
 	"fmt"
 	"io"
+
+	"github.com/AkimioJR/MediaWarp/internal/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

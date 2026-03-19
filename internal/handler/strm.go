@@ -1,10 +1,6 @@
 package handler
 
 import (
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/logging"
-	"MediaWarp/internal/service"
-	"MediaWarp/internal/service/alist"
 	"context"
 	"fmt"
 	"net/http"
@@ -12,6 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
+	"github.com/AkimioJR/MediaWarp/internal/service"
+	"github.com/AkimioJR/MediaWarp/internal/service/alist"
 
 	"github.com/allegro/bigcache/v3"
 )

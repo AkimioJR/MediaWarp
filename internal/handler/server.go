@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/config"
 	"errors"
 	"net/http"
 	"regexp"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/config"
 )
 
 // 媒体服务器处理接口

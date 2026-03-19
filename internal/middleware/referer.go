@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/constants"
 
 	"github.com/gin-gonic/gin"
 )

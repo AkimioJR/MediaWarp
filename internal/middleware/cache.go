@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"MediaWarp/internal/logging"
 	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
+
+	"github.com/AkimioJR/MediaWarp/internal/logging"
 
 	"github.com/allegro/bigcache/v3"
 	"github.com/gin-gonic/gin"

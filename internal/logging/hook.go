@@ -1,9 +1,10 @@
 package logging
 
 import (
-	"MediaWarp/internal/config"
-	"MediaWarp/utils"
 	"os"
+
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/utils"
 
 	"github.com/sirupsen/logrus"
 )

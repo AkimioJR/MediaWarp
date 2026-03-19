@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/logging"
-	"MediaWarp/utils"
 	"bytes"
 	"fmt"
 	"io"
@@ -13,6 +10,10 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
+	"github.com/AkimioJR/MediaWarp/utils"
 
 	"github.com/tidwall/gjson"
 )

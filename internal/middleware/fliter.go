@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/logging"
 	"net/http"
 	"strings"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
 
 	"github.com/gin-gonic/gin"
 )

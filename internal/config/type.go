@@ -1,8 +1,9 @@
 package config
 
 import (
-	"MediaWarp/constants"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/constants"
 )
 
 // 程序版本信息

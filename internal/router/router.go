@@ -1,13 +1,14 @@
 package router
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/handler"
-	"MediaWarp/internal/logging"
-	"MediaWarp/internal/middleware"
-	"MediaWarp/static"
 	"net/http"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/handler"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
+	"github.com/AkimioJR/MediaWarp/internal/middleware"
+	"github.com/AkimioJR/MediaWarp/static"
 
 	"github.com/gin-gonic/gin"
 )

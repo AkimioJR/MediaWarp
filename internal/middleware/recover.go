@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"MediaWarp/internal/logging"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/AkimioJR/MediaWarp/internal/logging"
 
 	"github.com/gin-gonic/gin"
 )

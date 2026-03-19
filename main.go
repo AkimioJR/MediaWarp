@@ -1,18 +1,19 @@
 package main
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/handler"
-	"MediaWarp/internal/logging"
-	"MediaWarp/internal/router"
-	"MediaWarp/internal/service"
-	"MediaWarp/utils"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/handler"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
+	"github.com/AkimioJR/MediaWarp/internal/router"
+	"github.com/AkimioJR/MediaWarp/internal/service"
+	"github.com/AkimioJR/MediaWarp/utils"
 
 	"encoding/json"
 

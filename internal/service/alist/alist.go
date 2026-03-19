@@ -1,8 +1,6 @@
 package alist
 
 import (
-	"MediaWarp/internal/config"
-	"MediaWarp/utils"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -13,6 +11,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/utils"
 
 	"github.com/allegro/bigcache/v3"
 )

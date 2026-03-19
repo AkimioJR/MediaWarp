@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"MediaWarp/constants"
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/logging"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,6 +11,10 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/constants"
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/sjson"

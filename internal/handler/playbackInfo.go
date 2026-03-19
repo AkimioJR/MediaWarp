@@ -1,15 +1,16 @@
 package handler
 
 import (
-	"MediaWarp/internal/config"
-	"MediaWarp/internal/logging"
-	"MediaWarp/internal/service"
-	"MediaWarp/internal/service/alist"
-	"MediaWarp/utils"
 	"fmt"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/AkimioJR/MediaWarp/internal/config"
+	"github.com/AkimioJR/MediaWarp/internal/logging"
+	"github.com/AkimioJR/MediaWarp/internal/service"
+	"github.com/AkimioJR/MediaWarp/internal/service/alist"
+	"github.com/AkimioJR/MediaWarp/utils"
 )
 
 func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, itemId string, id string, directStreamURL *string) {

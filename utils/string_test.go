@@ -1,10 +1,11 @@
 package utils_test
 
 import (
-	"MediaWarp/utils"
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/AkimioJR/MediaWarp/utils"
 )
 
 func TestResolveEmbyAPIKVPairs(t *testing.T) {
