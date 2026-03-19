@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 	"sync"
@@ -22,9 +23,9 @@ type alistToken struct {
 	mutex    sync.RWMutex // 令牌锁
 }
 type AlistClient struct {
-	endpoint string // 服务器入口 URL
-	username string // 用户名
-	password string // 密码
+	endpoint *url.URL // 服务器入口 URL
+	username string   // 用户名
+	password string   // 密码
 
 	userInfo UserInfoData
 
@@ -35,8 +36,16 @@ type AlistClient struct {
 
 // 获得AlistClient实例
 func NewAlistClient(addr string, username string, password string, token *string) (*AlistClient, error) {
+	endpoint, err := url.Parse(addr)
+	if err != nil {
+		return nil, fmt.Errorf("无效的 Alist 地址: %w", err)
+	}
+	if endpoint.Scheme == "" {
+		endpoint.Scheme = "http"
+	}
+	endpoint.Path = ""
 	client := AlistClient{
-		endpoint: utils.GetEndpoint(addr),
+		endpoint: endpoint,
 		username: username,
 		password: password,
 		client:   utils.GetHTTPClient(),
@@ -70,7 +79,7 @@ func NewAlistClient(addr string, username string, password string, token *string
 //
 // 避免直接访问 endpoint 字段
 func (client *AlistClient) GetEndpoint() string {
-	return client.endpoint
+	return client.endpoint.String()
 }
 
 // 得到用户名
