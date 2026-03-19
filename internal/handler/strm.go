@@ -105,9 +105,10 @@ func alistStrmHandler(content string, alistAddr string, needTranscodeResourceInf
 		transcodeResources: make([]TranscodeResourceInfo, 0),
 	}
 
-	res.url, err = client.GetFileURL(content, config.AlistStrm.RawURL)
-	if err != nil {
-		return nil, fmt.Errorf("获取文件 %s 的 URL 失败：%w", content, err)
+	if config.AlistStrm.RawURL {
+		res.url = fileData.RawURL
+	} else {
+		res.url = client.BuildFileDownloadURL(content, fileData.Sign)
 	}
 	logging.Infof("AlistStrm 重定向至：%s", res.url)
 
