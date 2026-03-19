@@ -50,6 +50,10 @@ dockers_v2:
   - dockerfile: docker/Dockerfile
     images:
       - akimio/mediawarp
+    build_args:
+      APP_VERSION: "{{ .Version }}"
+      COMMIT_HASH: "{{ .FullCommit }}"
+      BUILD_DATE: "{{ .Date }}"
     tags:
       - "{{ .Version }}"
       - "{{ if not .IsSnapshot }}latest{{ end }}"
