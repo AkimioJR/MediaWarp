@@ -1,14 +1,21 @@
 FROM golang:1.24 AS builder
+
+ARG APP_VERSION=dev
+ARG COMMIT_HASH=unknown
+ARG BUILD_DATE=unknown
+
 ENV GO111MODULE=on \
-    GOPROXY=https://goproxy.io,direct
+    GOPROXY=https://goproxy.io,direct \
+    GOTOOLCHAIN=auto
 
 WORKDIR /builder
 COPY . .
 RUN go mod download && \
     go build -ldflags " \
     -s -w \
-    -X MediaWarp/internal/config.commitHash=$(git rev-parse HEAD) \
-    -X MediaWarp/internal/config.buildDate=$(date -u '+%Y-%m-%d %H:%M:%S')" \
+    -X MediaWarp/internal/config.appVersion=${APP_VERSION} \
+    -X MediaWarp/internal/config.commitHash=${COMMIT_HASH} \
+    -X MediaWarp/internal/config.buildDate=${BUILD_DATE}" \
     -o MediaWarp
 
 FROM alpine:latest
