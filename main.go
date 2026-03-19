@@ -57,6 +57,8 @@ func main() {
 		logging.Info("MediaWarp 已退出")
 	}()
 
+	logging.Info("正在加载配置文件: ", configPath)
+
 	if err := config.Init(configPath); err != nil { // 初始化配置
 		panic("配置初始化失败: " + err.Error())
 	}
