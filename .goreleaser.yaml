@@ -47,7 +47,7 @@ builds:
       - -X MediaWarp/internal/config.buildDate={{ .Date }}
 
 dockers_v2:
-  - dockerfile: docker/Dockerfile.goreleaser
+  - dockerfile: docker/Dockerfile
     images:
       - akimio/mediawarp
     tags:
