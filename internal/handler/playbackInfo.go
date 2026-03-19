@@ -28,9 +28,6 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, ite
 
 	if !config.HTTPStrm.Proxy {
 		jsonChain.Set(
-			bsePath+"SupportsDirectStream",
-			false,
-		).Set(
 			bsePath+"SupportsTranscoding",
 			false,
 		).Delete(
@@ -42,9 +39,9 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, ite
 		).Delete(
 			bsePath + "TrancodeLiveStartIndex",
 		)
-		msgs = append(msgs, "禁止串流/转码行为")
+		msgs = append(msgs, "禁止转码行为")
 	} else {
-		msgs = append(msgs, "保持原有串流/转码行为")
+		msgs = append(msgs, "保持原有转码行为")
 	}
 
 	if directStreamURL != nil {
