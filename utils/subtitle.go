@@ -51,7 +51,7 @@ func SRT2ASS(srtText []byte, style []string) []byte {
 
 	srtText = bytes.ReplaceAll(srtText, []byte("\r"), []byte(""))
 	var lines [][]byte
-	for _, line := range bytes.Split(srtText, []byte("\n")) {
+	for line := range bytes.SplitSeq(srtText, []byte("\n")) {
 		line = bytes.TrimSpace(line)
 		if len(line) != 0 {
 			lines = append(lines, line)
