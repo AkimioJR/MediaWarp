@@ -93,6 +93,24 @@ func (client *Client) GetUserInfo() UserInfoData {
 	return client.userInfo
 }
 
+// BuildFileDownloadURL 构建 Alist 文件下载 URL。
+//
+// 生成格式：<endpoint>/d/<base_path>/<file_path>?sign=<sign>
+func (client *Client) BuildFileDownloadURL(filePath string, sign string) string {
+	endpointURL := *client.endpoint // 复制一份 URL 对象，避免修改原对象
+	cleanBasePath := strings.TrimPrefix(client.userInfo.BasePath, "/")
+	cleanFilePath := strings.TrimPrefix(filePath, "/")
+	endpointURL.Path = path.Join(endpointURL.Path, "d", cleanBasePath, cleanFilePath)
+	query := endpointURL.Query()
+	query.Del("sign")
+	if sign != "" {
+		query.Set("sign", sign)
+	}
+	endpointURL.RawQuery = query.Encode()
+
+	return endpointURL.String()
+}
+
 // 得到一个可用的 Token
 //
 // 先从缓存池中读取，若过期或者未找到则重新生成
@@ -213,14 +231,9 @@ func (client *Client) GetFileURL(p string, isRawURL bool) (string, error) {
 	}
 	if isRawURL {
 		return fileData.RawURL, nil
+	} else {
+		return client.BuildFileDownloadURL(p, fileData.Sign), nil
 	}
-	var url strings.Builder
-	url.WriteString(client.GetEndpoint())
-	url.WriteString(path.Join("/d", client.userInfo.BasePath, p))
-	if fileData.Sign != "" {
-		url.WriteString("?sign=" + fileData.Sign)
-	}
-	return url.String(), nil
 }
 
 func (client *Client) GetFsOther(req *FsOtherRequest) (any, error) {
