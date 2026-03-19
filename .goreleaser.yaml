@@ -7,8 +7,6 @@ snapshot:
 
 release:
   name_template: "{{ .Tag }}"
-  prerelease: auto
-  make_latest: '{{ if contains .Version "-" }}false{{ else }}true{{ end }}'
   extra_files:
     - glob: ./config/config.yaml.example
       name_template: config.yaml
@@ -86,6 +84,7 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^build:"
+      - "^ci:"
       - "^release:"
       - "^issue:"
       - "^MediaWarp"
