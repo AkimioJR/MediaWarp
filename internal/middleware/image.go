@@ -19,10 +19,9 @@ func ImageCache(ttl time.Duration, reg *regexp.Regexp) gin.HandlerFunc {
 	cacheFunc := getCacheBaseFunc(cachePool, "图片", reg.String())
 
 	return func(ctx *gin.Context) {
-		if ctx.Request.Method != http.MethodGet || !reg.MatchString(ctx.Request.URL.Path) {
-			ctx.Next()
-			return
+		if ctx.Request.Method == http.MethodGet && reg.MatchString(ctx.Request.URL.Path) {
+			cacheFunc(ctx)
 		}
-		cacheFunc(ctx)
+		ctx.Next()
 	}
 }
