@@ -41,9 +41,9 @@ builds:
     binary: "{{ .ProjectName }}"
     ldflags:
       - -s -w
-      - -X MediaWarp/internal/config.appVersion={{ .Version }}
-      - -X MediaWarp/internal/config.commitHash={{ .FullCommit }}
-      - -X MediaWarp/internal/config.buildDate={{ .Date }}
+      - -X github.com/AkimioJR/MediaWarp/internal/config.appVersion={{ .Version }}
+      - -X github.com/AkimioJR/MediaWarp/internal/config.commitHash={{ .FullCommit }}
+      - -X github.com/AkimioJR/MediaWarp/internal/config.buildDate={{ .Date }}
 
 dockers_v2:
   - dockerfile: docker/Dockerfile

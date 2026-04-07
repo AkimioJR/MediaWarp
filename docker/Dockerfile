@@ -12,9 +12,9 @@ COPY . .
 RUN go mod download && \
     go build -ldflags " \
     -s -w \
-    -X MediaWarp/internal/config.appVersion=${APP_VERSION} \
-    -X MediaWarp/internal/config.commitHash=${COMMIT_HASH} \
-    -X MediaWarp/internal/config.buildDate=${BUILD_DATE}" \
+    -X github.com/AkimioJR/MediaWarp/internal/config.appVersion=${APP_VERSION} \
+    -X github.com/AkimioJR/MediaWarp/internal/config.commitHash=${COMMIT_HASH} \
+    -X github.com/AkimioJR/MediaWarp/internal/config.buildDate=${BUILD_DATE}" \
     -o MediaWarp
 
 FROM alpine:latest
