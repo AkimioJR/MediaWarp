@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"reflect"
 	"runtime"
 	"runtime/debug"
@@ -163,4 +164,18 @@ func getFinalURL(client *http.Client, rawURL string, ua string) (string, error) 
 var jsonChainOption = &sjson.Options{
 	Optimistic:     true,
 	ReplaceInPlace: true,
+}
+
+// readStrmContent returns the trimmed content of a .strm file at filePath.
+// If filePath does not end with ".strm", it is returned unchanged.
+func readStrmContent(filePath string) string {
+	if !strings.HasSuffix(strings.ToLower(filePath), ".strm") {
+		return filePath
+	}
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		logging.Warningf("读取 strm 文件内容失败: %v", err)
+		return filePath
+	}
+	return strings.TrimSpace(string(data))
 }

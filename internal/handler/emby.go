@@ -243,15 +243,16 @@ func (handler *EmbyHandler) VideosHandler(ctx *gin.Context) {
 		logging.Debugf("mediasource.ID: %s ; mediaSourceID: %s ; mediaSourceID_without_prefix: %s", *mediasource.ID, mediaSourceID, mediaSourceID_without_prefix)
 		// EmbyServer >= 4.9 返回的ID带有前缀mediasource_
 		if strings.Replace(*mediasource.ID, "mediasource_", "", 1) == mediaSourceID_without_prefix {
+			strmContent := readStrmContent(*mediasource.Path)
 			switch strmFileType {
 			case constants.HTTPStrm:
 				if *mediasource.Protocol == emby.HTTP {
-					ctx.Redirect(http.StatusFound, handler.httpStrmHandler(*mediasource.Path, ctx.Request.UserAgent()))
+					ctx.Redirect(http.StatusFound, handler.httpStrmHandler(strmContent, ctx.Request.UserAgent()))
 					return
 				}
 
 			case constants.AlistStrm: // 无需判断 *mediasource.Container 是否以Strm结尾，当 AlistStrm 存储的位置有对应的文件时，*mediasource.Container 会被设置为文件后缀
-				res, err := alistStrmHandler(*mediasource.Path, opt.(string), false)
+				res, err := alistStrmHandler(strmContent, opt.(string), false)
 				if err != nil {
 					logging.Warningf("获取 AlistStrm 重定向 URL 失败: %#v", err)
 					handler.ReverseProxy(ctx.Writer, ctx.Request)
