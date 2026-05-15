@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -46,16 +47,25 @@ func processHTTPStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, ite
 
 	if directStreamURL != nil {
 		msgs = append(msgs, fmt.Sprintf("原直链播放链接: %s", *directStreamURL))
+
+		// 尝试从原始 URL 中提取 MediaSourceId，以解决 Emby 4.9+ 的 mediasource_ 前缀问题
+		actualMediaSourceId := id
+		if u, err := url.Parse(*directStreamURL); err == nil {
+			if qid := u.Query().Get("MediaSourceId"); qid != "" {
+				actualMediaSourceId = qid
+			}
+		}
+
 		apikeypair, err := utils.ResolveEmbyAPIKVPairs(directStreamURL)
 		if err != nil {
 			logging.Warning("解析API键值对失败：", err)
 		}
-		directStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", itemId, id, apikeypair)
+		newDirectStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", itemId, actualMediaSourceId, apikeypair)
 		jsonChain.Set(
 			bsePath+"DirectStreamUrl",
-			directStreamURL,
+			newDirectStreamURL,
 		)
-		msgs = append(msgs, fmt.Sprintf("修改直链播放链接为: %s", directStreamURL))
+		msgs = append(msgs, fmt.Sprintf("修改直链播放链接为: %s", newDirectStreamURL))
 	}
 	logging.Infof("Media(id: %s) %s", id, strings.Join(msgs, ", "))
 }
@@ -105,16 +115,24 @@ func processAlistStrmPlaybackInfo(jsonChain *utils.JsonChain, bsePath string, it
 	if directStreamURL != nil {
 		msgs = append(msgs, fmt.Sprintf("原直链播放链接: %s", *directStreamURL))
 
+		// 尝试从原始 URL 中提取 MediaSourceId，以解决 Emby 4.9+ 的 mediasource_ 前缀问题
+		actualMediaSourceId := id
+		if u, err := url.Parse(*directStreamURL); err == nil {
+			if qid := u.Query().Get("MediaSourceId"); qid != "" {
+				actualMediaSourceId = qid
+			}
+		}
+
 		apikeypair, err := utils.ResolveEmbyAPIKVPairs(directStreamURL)
 		if err != nil {
 			logging.Warning("解析API键值对失败：", err)
 		}
-		directStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", itemId, id, apikeypair)
+		newDirectStreamURL := fmt.Sprintf("/Videos/%s/stream?MediaSourceId=%s&Static=true&%s", itemId, actualMediaSourceId, apikeypair)
 		jsonChain.Set(
 			bsePath+"DirectStreamUrl",
-			directStreamURL,
+			newDirectStreamURL,
 		)
-		msgs = append(msgs, fmt.Sprintf("修改直链播放链接为: %s", directStreamURL))
+		msgs = append(msgs, fmt.Sprintf("修改直链播放链接为: %s", newDirectStreamURL))
 	}
 
 	if size == nil {

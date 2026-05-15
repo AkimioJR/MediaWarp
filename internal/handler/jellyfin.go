@@ -138,7 +138,7 @@ func (handler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
 			processHTTPStrmPlaybackInfo(
 				jsonChain,
 				bsePath,
-				*mediasource.ID,
+				*mediasource.ItemID,
 				*mediasource.ID,
 				mediasource.DirectStreamURL,
 			)
@@ -147,7 +147,7 @@ func (handler *JellyfinHandler) ModifyPlaybackInfo(rw *http.Response) error {
 			processAlistStrmPlaybackInfo(
 				jsonChain,
 				bsePath,
-				*mediasource.ID,
+				*mediasource.ItemID,
 				*mediasource.ID,
 				opt.(string),
 				mediasource.DirectStreamURL,
