@@ -153,15 +153,44 @@ func (handler *EmbyHandler) ModifyPlaybackInfo(rw *http.Response) error {
 	for index, mediasource := range playbackInfoResponse.MediaSources {
 		startTime := time.Now()
 
-		logging.Debug("请求 ItemsServiceQueryItem：" + *mediasource.ID)
-		itemResponse, err := handler.client.ItemsServiceQueryItem(strings.Replace(*mediasource.ID, "mediasource_", "", 1), 1, "Path,MediaSources") // 查询 item 需要去除前缀仅保留数字部分
+		if mediasource.ID == nil {
+			logging.Debug("跳过缺少 Id 的 MediaSource")
+			continue
+		}
+
+		// Live TV / opened live streams are not library STRM items. They can omit ItemId
+		// and use a transient MediaSource Id, so pass them through unchanged.
+		if mediasource.IsInfiniteStream != nil && *mediasource.IsInfiniteStream {
+			logging.Debug("跳过直播 MediaSource：" + *mediasource.ID)
+			continue
+		}
+		if mediasource.RequiresOpening != nil && *mediasource.RequiresOpening {
+			logging.Debug("跳过需要打开直播流的 MediaSource：" + *mediasource.ID)
+			continue
+		}
+		if mediasource.ItemID == nil {
+			logging.Debug("跳过缺少 ItemId 的 MediaSource：" + *mediasource.ID)
+			continue
+		}
+
+		logging.Debug("请求 ItemsServiceQueryItem：" + *mediasource.ItemID)
+		itemResponse, err := handler.client.ItemsServiceQueryItem(*mediasource.ItemID, 1, "Path,MediaSources")
 		if err != nil {
 			logging.Warning("请求 ItemsServiceQueryItem 失败：", err)
+			continue
+		}
+		if itemResponse == nil || len(itemResponse.Items) == 0 {
+			logging.Warning("请求 ItemsServiceQueryItem 未返回 Item：", *mediasource.ItemID)
 			continue
 		}
 
 		bsePath := "MediaSources." + strconv.Itoa(index) + "."
 		item := itemResponse.Items[0]
+		if item.Path == nil {
+			logging.Debug("跳过缺少 Path 的 Item：" + *mediasource.ItemID)
+			continue
+		}
+
 		strmFileType, opt := recgonizeStrmFileType(*item.Path)
 		switch strmFileType {
 		case constants.HTTPStrm: // HTTPStrm 设置支持直链播放并且禁止转码
