@@ -41,7 +41,7 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
   - 已通过测试客户端（Web、iOS Emby、Infuse、Conflux、Fileball、Vidhub）
   - 支持 Strm：
     - HTTPStrm：Strm 文件内容是 HTTP 链接，浏览器访问链接可以直接下载到视频文件（**客户端需要可以访问到该链接，MediaWarp 不需要访问到该地址**）
-    - AlistStrm：Strm 文件内容是 Alist 上视频文件的路径（**客户端无需访问到 Alist 服务器，仅需要 MediaWarp 可以访问到 Alist 服务器，但是需要可以访问到 Alist 服务器上文件的 raw_url 属性，如果使用网盘存储则无需在意这一点，但目前兼容性较差且不支持转码，通过挂载真实目录可以缓解这一问题**）
+    - AlistStrm：Strm 文件内容是 AList 上视频文件的路径（**路径需要采用 utf-8 编码格式**；仅支持 **AList v3 API的服务I**，目前 **OpenList 兼容 AList v3 API**；**客户端无需访问到 AList 服务器，仅需要 MediaWarp 可以访问到 AList 服务器，但是需要可以访问到 AList 服务器上文件的 raw_url 属性，如果使用网盘存储则无需在意这一点，但目前兼容性较差且不支持转码，通过挂载真实目录可以缓解这一问题**）
 
 - 屏蔽特定客户端访问
   
@@ -55,13 +55,14 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
     <img src="./img/series.jpg" alt="电视剧" width=310px />
     <img src="./img/danmaku.png" alt="danmaku 弹幕" width=310px />
 
-- 嵌入功能
-  - ExternalPlayerUrl：调用外部播放器（仅 Emby）
-  - crx：美化包 [emby-crx](https://github.com/Nolovenodie/emby-crx)；[jellyfin-crx](https://github.com/newday-life/jellyfin-crx)
-  - ActorPlus：隐藏没有头像的演员和制作人员
-  - FanartShow：显示同人图（fanart 图）
-  - Danmaku：Web 弹幕 [Emby](https://github.com/9channel/dd-danmaku)；[Jellyfin](https://github.com/Izumiko/jellyfin-danmaku)
-  - ~~BeautifyCSS：Emby 美化 CSS 样式~~（已移除，若有需求请实用通过自定义 Web.Head 功能实现）
+- 内置嵌入脚本（括号内是支持的媒体服务器）
+  - ExternalPlayerUrl：调用外部播放器（Emby/Jellyfin）
+  - crx：美化包 [emby-crx](https://github.com/Nolovenodie/emby-crx)；[jellyfin-crx](https://github.com/newday-life/jellyfin-crx)（Emby/Jellyfin）
+  - ActorPlus：隐藏没有头像的演员和制作人员（Emby/Jellyfin）
+  - FanartShow：显示同人图（fanart 图）（Emby/Jellyfin）
+  - Danmaku：Web 弹幕（emby：[9channel/dd-danmaku](https://github.com/9channel/dd-danmaku)；jellyfin：[Jellyfin/jellyfin-danmaku](https://github.com/Izumiko/jellyfin-danmaku)；FNTV：[fn-danmaku.js](static/fn-danmaku/fn-danmaku.js)）
+  - VideoTogether：[一起看](https://2gether.video)（Emby/Jellyfin/FNTV）
+  - ~~BeautifyCSS：Emby 美化 CSS 样式~~（已移除，若有需求请通过自定义 Web.Head 功能实现）
 
 - 飞牛影视
   
