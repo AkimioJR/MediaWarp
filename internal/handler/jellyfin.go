@@ -49,7 +49,7 @@ func NewJellyfinHandler(addr string, apiKey string) (*JellyfinHandler, error) {
 			{
 				Regexp: constants.JellyfinRegexp.Router.ModifyPlaybackInfo,
 				Handler: responseModifyCreater(
-					&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
+					handler.proxy.Rewrite,
 					handler.ModifyPlaybackInfo,
 				),
 			},
@@ -65,7 +65,7 @@ func NewJellyfinHandler(addr string, apiKey string) (*JellyfinHandler, error) {
 					RegexpRouteRule{
 						Regexp: constants.JellyfinRegexp.Router.ModifyIndex,
 						Handler: responseModifyCreater(
-							&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
+							handler.proxy.Rewrite,
 							generateWebModifier(constants.JELLYFIN),
 						),
 					},

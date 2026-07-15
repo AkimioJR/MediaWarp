@@ -37,7 +37,7 @@ func NewFNTVHandler(addr string) (*FNTVHandler, error) {
 		{
 			Regexp: constants.FNTVRegexp.StreamHandler,
 			Handler: responseModifyCreater(
-				&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
+				handler.proxy.Rewrite,
 				handler.ModifyStream,
 			),
 		},
@@ -50,7 +50,7 @@ func NewFNTVHandler(addr string) (*FNTVHandler, error) {
 				RegexpRouteRule{
 					Regexp: constants.FNTVRegexp.ModifyIndex,
 					Handler: responseModifyCreater(
-						&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
+						handler.proxy.Rewrite,
 						generateWebModifier(constants.FNTV),
 					),
 				},

@@ -34,18 +34,21 @@ func newSingleHostRewriteProxy(target *url.URL) *httputil.ReverseProxy {
 // 响应修改创建器
 //
 // 将需要修改上游响应的处理器包装成一个 gin.HandlerFunc 处理器
-func responseModifyCreater(proxy *httputil.ReverseProxy, modifyResponseFN func(rw *http.Response) error) gin.HandlerFunc {
+func responseModifyCreater(rewrite func(*httputil.ProxyRequest), modifyResponseFN func(rw *http.Response) error) gin.HandlerFunc {
 	funcPtr := reflect.ValueOf(modifyResponseFN).Pointer()
 	funcName := strings.ReplaceAll(runtime.FuncForPC(funcPtr).Name(), "-fm", "")
 	logging.Debugf("创建响应修改处理器：%s", funcName)
 
-	proxy.ModifyResponse = func(rw *http.Response) error {
-		defer func() {
-			if r := recover(); r != nil {
-				logging.Errorf("%s 发生 panic：%s\n%s", funcName, r, string(debug.Stack()))
-			}
-		}()
-		return modifyResponseFN(rw)
+	proxy := httputil.ReverseProxy{
+		Rewrite: rewrite,
+		ModifyResponse: func(rw *http.Response) error {
+			defer func() {
+				if r := recover(); r != nil {
+					logging.Errorf("%s 发生 panic：%s\n%s", funcName, r, string(debug.Stack()))
+				}
+			}()
+			return modifyResponseFN(rw)
+		},
 	}
 
 	return func(ctx *gin.Context) {
