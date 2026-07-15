@@ -49,7 +49,9 @@ func NewEmbyServerHandler(addr string, apiKey string) (*EmbyHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.proxy = httputil.NewSingleHostReverseProxy(target)
+	handler.proxy = &httputil.ReverseProxy{
+		Rewrite: newSingleHostRewrite(target),
+	}
 
 	{ // 初始化路由规则
 		handler.routerRules = []RegexpRouteRule{
@@ -60,14 +62,14 @@ func NewEmbyServerHandler(addr string, apiKey string) (*EmbyHandler, error) {
 			{
 				Regexp: constants.EmbyRegexp.Router.ModifyPlaybackInfo,
 				Handler: responseModifyCreater(
-					&httputil.ReverseProxy{Director: handler.proxy.Director},
+					&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
 					handler.ModifyPlaybackInfo,
 				),
 			},
 			{
 				Regexp: constants.EmbyRegexp.Router.ModifyBaseHtmlPlayer,
 				Handler: responseModifyCreater(
-					&httputil.ReverseProxy{Director: handler.proxy.Director},
+					&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
 					handler.ModifyBaseHtmlPlayer,
 				),
 			},
@@ -79,7 +81,7 @@ func NewEmbyServerHandler(addr string, apiKey string) (*EmbyHandler, error) {
 					RegexpRouteRule{
 						Regexp: constants.EmbyRegexp.Router.ModifyIndex,
 						Handler: responseModifyCreater(
-							&httputil.ReverseProxy{Director: handler.proxy.Director},
+							&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
 							generateWebModifier(constants.EMBY),
 						),
 					},
@@ -91,7 +93,7 @@ func NewEmbyServerHandler(addr string, apiKey string) (*EmbyHandler, error) {
 				RegexpRouteRule{
 					Regexp: constants.EmbyRegexp.Router.ModifySubtitles,
 					Handler: responseModifyCreater(
-						&httputil.ReverseProxy{Director: handler.proxy.Director},
+						&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
 						handler.ModifySubtitles,
 					),
 				},

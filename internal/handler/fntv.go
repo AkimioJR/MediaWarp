@@ -31,13 +31,15 @@ func NewFNTVHandler(addr string) (*FNTVHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.proxy = httputil.NewSingleHostReverseProxy(target)
+	handler.proxy = &httputil.ReverseProxy{
+		Rewrite: newSingleHostRewrite(target),
+	}
 
 	handler.routerRules = []RegexpRouteRule{
 		{
 			Regexp: constants.FNTVRegexp.StreamHandler,
 			Handler: responseModifyCreater(
-				&httputil.ReverseProxy{Director: handler.proxy.Director},
+				&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
 				handler.ModifyStream,
 			),
 		},
@@ -50,7 +52,7 @@ func NewFNTVHandler(addr string) (*FNTVHandler, error) {
 				RegexpRouteRule{
 					Regexp: constants.FNTVRegexp.ModifyIndex,
 					Handler: responseModifyCreater(
-						&httputil.ReverseProxy{Director: handler.proxy.Director},
+						&httputil.ReverseProxy{Rewrite: handler.proxy.Rewrite},
 						generateWebModifier(constants.FNTV),
 					),
 				},

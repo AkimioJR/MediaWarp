@@ -20,6 +20,15 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+// newSingleHostRewrite 创建单主机反向代理的 Rewrite 函数
+//
+// 替代已弃用的 Director 模式，自动处理 hop-by-hop headers 和 X-Forwarded 头
+func newSingleHostRewrite(target *url.URL) func(req *httputil.ProxyRequest) {
+	return func(req *httputil.ProxyRequest) {
+		req.SetURL(target)
+	}
+}
+
 // 响应修改创建器
 //
 // 将需要修改上游响应的处理器包装成一个 gin.HandlerFunc 处理器
