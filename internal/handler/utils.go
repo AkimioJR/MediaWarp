@@ -23,10 +23,12 @@ import (
 // newSingleHostRewrite 创建单主机反向代理的 Rewrite 函数
 //
 // 替代已弃用的 Director 模式，自动处理 hop-by-hop headers 和 X-Forwarded 头
-func newSingleHostRewrite(target *url.URL) func(req *httputil.ProxyRequest) {
-	return func(req *httputil.ProxyRequest) {
-		req.SetURL(target)
-	}
+func newSingleHostRewriteProxy(target *url.URL) *httputil.ReverseProxy {
+	return new(httputil.ReverseProxy{
+		Rewrite: func(req *httputil.ProxyRequest) {
+			req.SetURL(target)
+		},
+	})
 }
 
 // 响应修改创建器

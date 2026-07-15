@@ -49,9 +49,7 @@ func NewEmbyServerHandler(addr string, apiKey string) (*EmbyHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.proxy = &httputil.ReverseProxy{
-		Rewrite: newSingleHostRewrite(target),
-	}
+	handler.proxy = newSingleHostRewriteProxy(target)
 
 	{ // 初始化路由规则
 		handler.routerRules = []RegexpRouteRule{

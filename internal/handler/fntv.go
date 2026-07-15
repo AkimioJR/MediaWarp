@@ -31,9 +31,7 @@ func NewFNTVHandler(addr string) (*FNTVHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.proxy = &httputil.ReverseProxy{
-		Rewrite: newSingleHostRewrite(target),
-	}
+	handler.proxy = newSingleHostRewriteProxy(target)
 
 	handler.routerRules = []RegexpRouteRule{
 		{
