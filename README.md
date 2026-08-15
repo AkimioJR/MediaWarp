@@ -121,5 +121,5 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
 
 # Star History
 <a href="https://github.com/AkimioJR/MediaWarp/stargazers">
-    <img width="500" alt="Star History Chart" src="https://api.star-history.com/svg?repos=AkimioJR/MediaWarp&type=Date">
+    <img width="500" alt="Star History Chart" src="https://star-history.dera.page/svg?repos=AkimioJR/MediaWarp&type=Date">
 </a> 
