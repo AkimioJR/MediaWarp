@@ -86,7 +86,8 @@ func GetEndpoint(addr string) string {
 	return strings.TrimSuffix(addr, "/")
 }
 
-var embyAPIKeys = []string{"api_key", "X-Emby-Token"}
+// api_key 为 Emby / Jellyfin 10.x 使用；Jellyfin 12 改为大写 ApiKey；X-Emby-Token 为旧版认证头
+var embyAPIKeys = []string{"api_key", "ApiKey", "X-Emby-Token"}
 
 // 从 URL 中查询参数中解析 Emby 的 API 键值对
 //
