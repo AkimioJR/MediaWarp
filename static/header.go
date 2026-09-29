@@ -5,8 +5,8 @@ package static
 const basicPath = "/MediaWarp/static/"
 
 const (
-	WebCustomHeaderStart = `<!-- MediaWarp Web 用户自定义额外 Header Start -->`
-	WebCustomHeaderEnd   = `<!-- MediaWarp Web 用户自定义额外 Header End -->`
+	WebCustomHeaderStart  = `<!-- MediaWarp Web 用户自定义额外 Header Start -->`
+	WebCustomHeaderEnd    = `<!-- MediaWarp Web 用户自定义额外 Header End -->`
 	WebEmbededHeaderStart = `<!-- MediaWarp Web 内嵌脚本插入 Start -->`
 	WebEmbededHeaderEnd   = `<!-- MediaWarp Web 内嵌脚本插入 End -->`
 )
