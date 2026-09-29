@@ -54,6 +54,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           submodules: recursive
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Download binary artifacts
         uses: actions/download-artifact@v8
@@ -106,11 +108,109 @@ jobs:
             popd > /dev/null
           done
 
+      # 基于上一个 tag 到 HEAD 之间的提交，按 Conventional Commits 前缀自动生成 changelog
+      - name: Generate Release Body
+        id: release_body
+        run: |
+          set -euo pipefail
+
+          TAG_NAME="${GITHUB_REF_NAME}"
+
+          # 获取上一个版本 tag：排除当前版本，取上一个版本 tag
+          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-v:refname | grep -v "^${TAG_NAME}$" | head -n 1 || true)
+          echo "Previous tag: ${PREVIOUS_TAG}"
+
+          # 使用 || 作为分隔符，同时获取 commit 消息和作者名
+          if [ -z "${PREVIOUS_TAG}" ]; then
+            COMMITS=$(git log --pretty=format:"%s||%an" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%s||%an" "${PREVIOUS_TAG}..HEAD")
+          fi
+
+          # 分类收集 commit 消息（使用关联数组去重）
+          declare -A SEEN
+          FEATURES=""
+          FIXES=""
+          OTHERS=""
+
+          while IFS= read -r line; do
+            # 跳过空行
+            if [ -z "$line" ]; then
+              continue
+            fi
+
+            # 分离 commit 消息和作者
+            msg=$(echo "$line" | sed 's/||[^|]*$//')
+            author=$(echo "$line" | sed 's/.*||//')
+
+            # 跳过 Merge commit 和版本更新 commit
+            if echo "$msg" | grep -qE "^Merge pull request|^Merge branch|^chore\(release\)|^更新 version|^MediaWarp v"; then
+              continue
+            fi
+
+            # 按 Conventional Commits 前缀分类
+            if echo "$msg" | grep -qiE "^(feat|perfect)(\(.+\))?:"; then
+              desc=$(echo "$msg" | sed -E 's/^(feat|perfect)(\([^)]*\))?:[[:space:]]*//')
+              category="FEATURES"
+            elif echo "$msg" | grep -qiE "^fix(\(.+\))?:"; then
+              desc=$(echo "$msg" | sed -E 's/^fix(\([^)]*\))?:[[:space:]]*//')
+              category="FIXES"
+            elif echo "$msg" | grep -qiE "^(docs|style|refactor|perf|test|build|ci|chore|revert|deps)(\(.+\))?:"; then
+              desc=$(echo "$msg" | sed -E 's/^(docs|style|refactor|perf|test|build|ci|chore|revert|deps)(\([^)]*\))?:[[:space:]]*//')
+              category="OTHERS"
+            else
+              desc="$msg"
+              category="OTHERS"
+            fi
+
+            # 使用 "分类+描述" 作为去重的 key，跳过重复内容
+            dedup_key="${category}::${desc}"
+            if [ -n "${SEEN[$dedup_key]+x}" ]; then
+              continue
+            fi
+            SEEN[$dedup_key]=1
+
+            # 添加 by @author 引用
+            entry="- ${desc} by @${author}"
+
+            case "$category" in
+              FEATURES) FEATURES="${FEATURES}${entry}\n" ;;
+              FIXES)    FIXES="${FIXES}${entry}\n" ;;
+              OTHERS)   OTHERS="${OTHERS}${entry}\n" ;;
+            esac
+          done <<< "$COMMITS"
+
+          # 组装 changelog
+          CHANGELOG=""
+
+          if [ -n "$FEATURES" ]; then
+            CHANGELOG="${CHANGELOG}### ✨ 新功能\n\n${FEATURES}\n"
+          fi
+
+          if [ -n "$FIXES" ]; then
+            CHANGELOG="${CHANGELOG}### 🐛 修复\n\n${FIXES}\n"
+          fi
+
+          if [ -n "$OTHERS" ]; then
+            CHANGELOG="${CHANGELOG}### 🔧 其他\n\n${OTHERS}\n"
+          fi
+
+          # 添加版本对比链接
+          if [ -n "${PREVIOUS_TAG}" ]; then
+            CHANGELOG="${CHANGELOG}**完整更新记录**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...${TAG_NAME}"
+          fi
+
+          # 使用 heredoc 写入多行输出
+          {
+            echo "body<<EOF"
+            printf '%b\n' "${CHANGELOG}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
-          draft: true
-          generate_release_notes: true
+          body: ${{ steps.release_body.outputs.body }}
           files: |
             dist/release/MediaWarp_*
