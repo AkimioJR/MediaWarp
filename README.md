@@ -1,5 +1,3 @@
-[license]: /LICENSE
-[license-badge]: https://img.shields.io/github/license/AkimioJR/MediaWarp?style=flat-square&a=1
 [prs]: https://github.com/AkimioJR/MediaWarp
 [prs-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
 [issues]: https://github.com/AkimioJR/MediaWarp/issues/new
@@ -36,7 +34,7 @@ MediaWarp 是**前置于 EmbyServer/Jellyfin/飞牛影视 的反向代理服务�
 </div>
 
 # 功能
-- Strm 文件可以实现 302 直链播放，流量不经过 EmbyServer/Jellyfin
+- Strm 文件可以实现 302 直链播放，流量不经过 Emby Server / Jellyfin Server / 飞牛影视服务器
   - **推荐配合 [AutoFilm](https://github.com/AkimioJR/AutoFilm) 使用**
   - 已通过测试客户端（Web、iOS Emby、Infuse、Conflux、Fileball、Vidhub）
   - 支持 Strm：
