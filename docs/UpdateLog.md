@@ -142,3 +142,12 @@
   - 使用嵌入文件方式处理启动 Logo，避免 Logo 字符串首尾空白
   - 升级 Go 版本至 1.26 并更新依赖项和静态资源子模块
   - 重构 CI、GoReleaser 和 Docker 构建流程，支持构建参数注入版本信息、新增 linux/riscv64 镜像并同步 README 到 Docker Hub
+- 2026.9.29: v0.2.5
+  - 新增飞牛影视 (FNTV) 弹幕插件支持，引入前端弹幕脚本注入与播放信息钩子
+  - 修复 VideosHandler 中 Emby 和 Jellyfin 响应缺失 Path 或 MediaSources 时的 nil 指针解引用问题
+  - 修复 ImageCache 缓存未命中时重复调用 ctx.Next() 的问题
+  - 重构页面头部脚本注入逻辑，统一管理 Emby、Jellyfin、FNTV 的嵌入处理
+  - 将反向代理已弃用的 ReverseProxy.Director 迁移至 Rewrite，并优化代理创建逻辑
+  - 优化日志格式化输出，减少字符串与内存分配
+  - 升级 Go 工具链版本至 1.26.6 并更新依赖项版本
+  - 重构 CI/CD 流程，移除 GoReleaser 改用 GitHub Actions 处理跨平台二进制与 Docker 构建，并增加代码格式、vet 与漏洞检查工作流
