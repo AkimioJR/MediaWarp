@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".github/workflows/ci.yaml"
+  pull_request:
+    paths:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".github/workflows/ci.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  gofmt:
+    name: Check Go Code formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Check formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          go_files=()
+          while IFS= read -r -d '' go_file; do
+            go_files+=("${go_file}")
+          done < <(git ls-files -z ':(glob)**/*.go')
+
+          if (( ${#go_files[@]} == 0 )); then
+            echo "No Go files found."
+            exit 0
+          fi
+
+          unformatted="$(gofmt -l "${go_files[@]}")"
+          if [[ -n "${unformatted}" ]]; then
+            echo "The following Go files are not formatted:"
+            printf '%s\n' "${unformatted}"
+            echo "Run gofmt -w on these files and commit the changes."
+            exit 1
+          fi
+
+  govet:
+    name: Run go vet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: "**/go.sum"
+
+      - name: Vet all Go modules
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          module_files=()
+          while IFS= read -r -d '' module_file; do
+            module_files+=("${module_file}")
+          done < <(git ls-files -z ':(glob)**/go.mod')
+
+          if (( ${#module_files[@]} == 0 )); then
+            echo "No Go modules found."
+            exit 0
+          fi
+
+          for module_file in "${module_files[@]}"; do
+            module_dir="$(dirname "${module_file}")"
+            echo "::group::go vet ${module_dir}"
+            (
+              cd "${module_dir}"
+              go vet ./...
+            )
+            echo "::endgroup::"
+          done
+
+  govulncheck:
+    name: Scan Go dependencies for vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: "**/go.sum"
+
+      - name: Install govulncheck
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tool_dir="${RUNNER_TEMP}/go-tools"
+          mkdir -p "${tool_dir}"
+          GOBIN="${tool_dir}" go install golang.org/x/vuln/cmd/govulncheck@latest
+          echo "${tool_dir}" >> "${GITHUB_PATH}"
+
+      - name: Scan all Go modules
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          module_files=()
+          while IFS= read -r -d '' module_file; do
+            module_files+=("${module_file}")
+          done < <(git ls-files -z ':(glob)**/go.mod')
+
+          if (( ${#module_files[@]} == 0 )); then
+            echo "No Go modules found."
+            exit 0
+          fi
+
+          for module_file in "${module_files[@]}"; do
+            module_dir="$(dirname "${module_file}")"
+            echo "::group::govulncheck ${module_dir}"
+            (
+              cd "${module_dir}"
+              govulncheck ./...
+            )
+            echo "::endgroup::"
+          done
