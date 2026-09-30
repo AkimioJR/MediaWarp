@@ -61,6 +61,7 @@ var _ gin.ResponseWriter = (*WriterWarp)(nil)
 // 计算Key时忽略的查询参数
 var CacheKeyIgnoreQuery = []string{
 	"api_key",
+	"ApiKey", // Jellyfin 12 使用大写 ApiKey
 
 	// Fileball
 	"starttimeticks",
